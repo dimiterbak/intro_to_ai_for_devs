@@ -25,7 +25,7 @@ source intro_to_ai/bin/activate
 
 ## 2. Install the OpenAI SDK
 ```
-uv pip install openai
+uv pip install openai httpx
 ```
 
 ## 3. Export your API key
