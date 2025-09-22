@@ -111,7 +111,7 @@ known_actions = {
     "calculate": calculate
 }
 
-def run_examples():
+def show_examples():
     """Run some example queries to demonstrate the system"""
     print("=" * 80)
     print("QUERY EXAMPLES - Demonstrating ReAct (Reason + Act) Pattern")
@@ -149,7 +149,7 @@ def interactive_loop():
 
 if __name__ == '__main__':
     # First show examples
-    run_examples()
+    show_examples()
     
     # Then start interactive mode
     interactive_loop()
