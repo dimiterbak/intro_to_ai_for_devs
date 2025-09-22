@@ -48,6 +48,15 @@ def show_examples():
         print(f"\n--- Example {i} ---")
         print(example)
 
+
+def query(question, bot=None):
+
+    print("\n=== FULL PROMPT SENT TO MODEL ===")    
+    result = bot(question)
+    print("=== END OF PROMPT ===\n")
+    print(f"Answer: {result}")
+    return bot, result
+
 def interactive_loop():
     # Main interactive loop for user queries
     print("=" * 80)
@@ -64,10 +73,7 @@ def interactive_loop():
             if user_query:  # Only process non-empty queries
                 i += 1
                 print("\n-- Prompt", i)
-                print("\n=== FULL PROMPT SENT TO MODEL ===")    
-                result = bot(user_query)
-                print("=== END OF PROMPT ===\n")
-                print(f"Answer: {result}")
+                bot, result = query(user_query, bot)
             else:
                 print("Please enter a question.")
     except KeyboardInterrupt:
