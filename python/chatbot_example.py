@@ -1,6 +1,4 @@
 from openai import OpenAI
-import re
-import httpx
 
 class ChatBot:
     def __init__(self, system=""):
