@@ -7,7 +7,5 @@
 
 ## Installing required libraries
 
-We need to install the required libraries:
-```
-pip install  uv openai
-```
+You need to setup your environment as explained in:  [./setup.md](./setup.md)`
+
