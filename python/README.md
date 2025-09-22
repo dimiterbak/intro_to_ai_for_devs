@@ -7,5 +7,5 @@
 
 ## Installing required libraries
 
-You need to setup your environment as explained [here](./setup.md)`
+You need to setup your environment as explained [here](./setup.md)
 
