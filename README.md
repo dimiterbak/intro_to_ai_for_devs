@@ -1,2 +1,14 @@
-# intro_to_ai_for_devs
-Introduction to AI for Devs Workshop
+# Introduction to AI for Devs Workshop
+
+In this workshop we will:
+
+
+## Prerequisites
+
+- Python
+- Node
+- OpenAI key
+
+## Introduction
+
+
