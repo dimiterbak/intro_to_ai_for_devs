@@ -1,6 +1,12 @@
 from openai import OpenAI
+"""
+This notebook demonstrates the setup and use of the ReAct prompting framework with OpenAI's API, following the implementation details from 
+[Simon Willison's learning log](https://til.simonwillison.net/llms/python-react-pattern).
+The ReAct pattern combines reasoning and acting, allowing the model to iteratively think about a problem, take actions (like looking up information), and refine its answers based on observations.
+"""
 import re
 import httpx
+
 
 class ChatBot:
     def __init__(self, system=""):
