@@ -16,6 +16,12 @@ class ChatBot:
         return result
 
     def execute(self):
+        # Show the complete prompt being sent to the model
+        for i, msg in enumerate(self.messages, 1):
+            # print(f"Message {i} ({msg['role']}):")
+            print(f"  {msg['content']}")
+            print()
+        
         client = OpenAI()
 
         response = client.chat.completions.create(
@@ -63,14 +69,18 @@ Answer: The capital of France is Paris
 """.strip()
 
 def query(question, max_turns=5):
+    print("\nQuestion:", question)
     action_re = re.compile('^Action: (\w+): (.*)$')
     i = 0
     bot = ChatBot(prompt)
     next_prompt = question
     while i < max_turns:
         i += 1
+        print("\n-- Prompt", i)
+        print("\n=== FULL PROMPT SENT TO MODEL ===")
         result = bot(next_prompt)
         print(result)
+        print("=== END OF PROMPT ===\n")
         actions = [action_re.match(a) for a in result.split('\n') if action_re.match(a)]
         if actions:
             # There is an action to run
@@ -104,7 +114,7 @@ known_actions = {
 def run_examples():
     """Run some example queries to demonstrate the system"""
     print("=" * 80)
-    print("CHATBOT EXAMPLES - Demonstrating ReAct (Reason + Act) Pattern")
+    print("QUERY EXAMPLES - Demonstrating ReAct (Reason + Act) Pattern")
     print("=" * 80)
     
     examples = [
@@ -133,9 +143,9 @@ def interactive_loop():
             else:
                 print("Please enter a question.")
     except KeyboardInterrupt:
-        print("\n\nGoodbye! Thanks for using the ReAct chatbot.")
+        print("\n\nGoodbye! Thanks for using the ReAct agent.")
     except EOFError:
-        print("\n\nGoodbye! Thanks for using the ReAct chatbot.")
+        print("\n\nGoodbye! Thanks for using the ReAct agent.")
 
 if __name__ == '__main__':
     # First show examples
