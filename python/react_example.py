@@ -63,7 +63,6 @@ Answer: The capital of France is Paris
 """.strip()
 
 def query(question, max_turns=5):
-    print("\nQuestion:", question)
     action_re = re.compile('^Action: (\w+): (.*)$')
     i = 0
     bot = ChatBot(prompt)
@@ -102,19 +101,45 @@ known_actions = {
     "calculate": calculate
 }
 
-########################################################################################
-query("What states does Ohio share borders with?")
+def run_examples():
+    """Run some example queries to demonstrate the system"""
+    print("=" * 80)
+    print("CHATBOT EXAMPLES - Demonstrating ReAct (Reason + Act) Pattern")
+    print("=" * 80)
+    
+    examples = [
+        "What states does Ohio share borders with?",
+        "Calculate the square root of 256.",
+        "Who was the first president of the United States?"
+    ]
+    
+    for i, example in enumerate(examples, 1):
+        print(f"\n--- Example {i} ---")
+        print(example)
 
-########################################################################################
-query("Calculate the square root of 256.")
-
-########################################################################################
-query("Who was the first president of the United States?")
-
-########################################################################################
-# query("What is the chemical formula for water?")
+def interactive_loop():
+    """Main interactive loop for user queries"""
+    print("=" * 80)
+    print("INTERACTIVE MODE - Ask your own questions!")
+    print("Type your questions and press Enter. Use Ctrl+C to exit.")
+    print("=" * 80)
+    
+    try:
+        while True:
+            user_query = input("\nYour question: ").strip()
+            if user_query:  # Only process non-empty queries
+                print()
+                query(user_query)
+            else:
+                print("Please enter a question.")
+    except KeyboardInterrupt:
+        print("\n\nGoodbye! Thanks for using the ReAct chatbot.")
+    except EOFError:
+        print("\n\nGoodbye! Thanks for using the ReAct chatbot.")
 
 if __name__ == '__main__':
-    # Nothing special to run here; the top-level code has already executed.
-    # You can call a main() function if you've defined one in the notebook.
-    pass
+    # First show examples
+    run_examples()
+    
+    # Then start interactive mode
+    interactive_loop()
