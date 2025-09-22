@@ -148,9 +148,10 @@ class ChatBot:
 
     def __call__(self, message):
         self.messages.append({"role": "user", "content": message})
-        result = self.execute()
-        self.messages.append({"role": "assistant", "content": result})
-        return result
+        response_message = self.execute()
+        
+        # Return the response message object for query() to handle tool calling
+        return response_message
 
     def execute(self):
         # Show the complete prompt being sent to the model
@@ -168,45 +169,7 @@ class ChatBot:
             tools=self.get_tool_definitions()
         )
         
-        response_message = response.choices[0].message
-        
-        # Check if the model wants to call a tool
-        if response_message.tool_calls:
-            # Add the assistant's response to conversation history
-            self.messages.append({
-                "role": "assistant", 
-                "content": response_message.content,
-                "tool_calls": response_message.tool_calls
-            })
-            
-            # Execute each tool call
-            for tool_call in response_message.tool_calls:
-                function_name = tool_call.function.name
-                function_args = json.loads(tool_call.function.arguments)
-                
-                print(f"🔧 Executing tool: {function_name} with args: {function_args}")
-                
-                # Execute the tool
-                tool_result = self.execute_tool(function_name, function_args)
-                
-                # Add tool result to conversation
-                self.messages.append({
-                    "role": "tool",
-                    "content": json.dumps(tool_result) if not isinstance(tool_result, str) else tool_result,
-                    "tool_call_id": tool_call.id
-                })
-            
-            # Get final response from the model after tool execution
-            final_response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=self.messages,
-                tools=self.get_tool_definitions()
-            )
-            
-            return final_response.choices[0].message.content
-        
-        # No tool calls, return the response directly
-        return response_message.content
+        return response.choices[0].message
         
 
 def show_examples():
@@ -230,12 +193,49 @@ def show_examples():
         print(f"Question: {example}")
 
 
-def query(question, bot=None):
-
-    print("\n=== FULL PROMPT SENT TO MODEL ===")    
-    result = bot(question)
+def query(question, bot):
+    print("\n=== FULL PROMPT SENT TO MODEL ===")  
+      
+    response_message = bot(question)
     print("=== END OF PROMPT ===\n")
-    return result
+    
+    # Check if the model wants to call a tool
+    if response_message.tool_calls:
+        # Add the assistant's response to conversation history
+        bot.messages.append({
+            "role": "assistant", 
+            "content": response_message.content,
+            "tool_calls": response_message.tool_calls
+        })
+        
+        # Execute each tool call
+        for tool_call in response_message.tool_calls:
+            function_name = tool_call.function.name
+            function_args = json.loads(tool_call.function.arguments)
+            
+            print(f"🔧 Executing tool: {function_name} with args: {function_args}")
+            
+            # Execute the tool
+            tool_result = bot.execute_tool(function_name, function_args)
+            
+            # Add tool result to conversation
+            bot.messages.append({
+                "role": "tool",
+                "content": json.dumps(tool_result) if not isinstance(tool_result, str) else tool_result,
+                "tool_call_id": tool_call.id
+            })
+        
+        # Get final response from the model after tool execution
+        final_response = bot.execute()
+        
+        final_content = final_response.content
+        bot.messages.append({"role": "assistant", "content": final_content})
+        return final_content
+    
+    # No tool calls, return the response directly
+    content = response_message.content
+    bot.messages.append({"role": "assistant", "content": content})
+    return content
 
 def interactive_loop():
     # Main interactive loop for user queries
@@ -244,7 +244,7 @@ def interactive_loop():
     print("Type your questions and press Enter. Use Ctrl+C to exit.")
     print("I can help with file operations, code analysis, and general questions.")
     print("=" * 80)
-    
+
     bot = ChatBot(system="You are a helpful coding assistant with access to file system tools. You can read files, write files, see directory structures, execute bash commands, and search in files. Use these tools to help with coding tasks and file management.")  # Create one bot instance to maintain conversation history
     
     i = 0  # Prompt counter
