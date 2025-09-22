@@ -54,8 +54,7 @@ def query(question, bot=None):
     print("\n=== FULL PROMPT SENT TO MODEL ===")    
     result = bot(question)
     print("=== END OF PROMPT ===\n")
-    print(f"Answer: {result}")
-    return bot, result
+    return result
 
 def interactive_loop():
     # Main interactive loop for user queries
@@ -73,7 +72,8 @@ def interactive_loop():
             if user_query:  # Only process non-empty queries
                 i += 1
                 print("\n-- Prompt", i)
-                bot, result = query(user_query, bot)
+                result = query(user_query, bot)
+                print(f"Answer: {result}")
             else:
                 print("Please enter a question.")
     except KeyboardInterrupt:
