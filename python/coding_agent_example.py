@@ -5,6 +5,7 @@ from coding_agent_tools import CodingAgentTools
 
 class ChatBot:
     def __init__(self, system="", project_path=None):
+        self.number_of_prompts_sent = 0  # Initialize prompt counter
         if project_path is None:
             project_path = Path.cwd()  # Use current working directory as default
         self.agent_tools = CodingAgentTools(Path(project_path))
@@ -154,6 +155,9 @@ class ChatBot:
         return response_message
 
     def execute(self):
+        self.number_of_prompts_sent += 1
+        print("\n-- Prompt", self.number_of_prompts_sent, "--")
+        print("\n=== FULL PROMPT SENT TO MODEL ===")  
         # Show the complete prompt being sent to the model
         for i, msg in enumerate(self.messages, 1):
             # print(f"Message {i} ({msg['role']}):")
@@ -169,6 +173,7 @@ class ChatBot:
             tools=self.get_tool_definitions()
         )
         
+        print("=== END OF PROMPT ===\n")
         return response.choices[0].message
         
 
@@ -194,10 +199,8 @@ def show_examples():
 
 
 def query(question, bot):
-    print("\n=== FULL PROMPT SENT TO MODEL ===")  
-      
+
     response_message = bot(question)
-    print("=== END OF PROMPT ===\n")
     
     # Check if the model wants to call a tool
     if response_message.tool_calls:
@@ -252,8 +255,6 @@ def interactive_loop():
         while True:
             user_query = input("\nYour question: ").strip()
             if user_query:  # Only process non-empty queries
-                i += 1
-                print("\n-- Prompt", i)
                 result = query(user_query, bot)
                 print(f"Answer: {result}")
             else:
