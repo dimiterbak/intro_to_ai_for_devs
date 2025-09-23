@@ -10,6 +10,7 @@ import httpx
 
 class ChatBot:
     def __init__(self, system=""):
+        self.number_of_prompts_sent = 0  # Initialize prompt counter
         self.system = system
         self.messages = []
         if self.system:
@@ -22,6 +23,9 @@ class ChatBot:
         return result
 
     def execute(self):
+        self.number_of_prompts_sent += 1
+        print("\n-- Prompt", self.number_of_prompts_sent, "--")
+        print("\n=== FULL PROMPT SENT TO MODEL ===")  
         # Show the complete prompt being sent to the model
         for i, msg in enumerate(self.messages, 1):
             # print(f"Message {i} ({msg['role']}):")
@@ -37,6 +41,8 @@ class ChatBot:
         # Uncomment this to print out token usage each time, e.g.
         # CompletionUsage(completion_tokens=27, prompt_tokens=225, total_tokens=252, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=0, audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=0), prompt_tokens_details=PromptTokensDetails(audio_tokens=0, cached_tokens=0))
         # print(response.usage)
+                
+        print("=== END OF PROMPT ===\n")
         return response.choices[0].message.content
 
 prompt = """
@@ -74,19 +80,14 @@ You then output:
 Answer: The capital of France is Paris
 """.strip()
 
-def query(question, max_turns=5):
+def query(question, bot=None, max_turns=5):
     print("\nQuestion:", question)
     action_re = re.compile('^Action: (\w+): (.*)$')
     i = 0
-    bot = ChatBot(prompt)
     next_prompt = question
     while i < max_turns:
-        i += 1
-        print("\n-- Prompt", i)
-        print("\n=== FULL PROMPT SENT TO MODEL ===")
         result = bot(next_prompt)
         print(result)
-        print("=== END OF PROMPT ===\n")
         actions = [action_re.match(a) for a in result.split('\n') if action_re.match(a)]
         if actions:
             # There is an action to run
@@ -140,12 +141,13 @@ def interactive_loop():
     print("Type your questions and press Enter. Use Ctrl+C to exit.")
     print("=" * 80)
     
+    bot = ChatBot(prompt)  # Create one bot instance to maintain conversation history
     try:
         while True:
             user_query = input("\nYour question: ").strip()
             if user_query:  # Only process non-empty queries
                 print()
-                query(user_query)
+                query(user_query, bot)
             else:
                 print("Please enter a question.")
     except KeyboardInterrupt:
