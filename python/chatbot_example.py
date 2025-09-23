@@ -47,6 +47,7 @@ def show_examples():
     examples = [
         "What states does Ohio share borders with?",
         "Calculate the square root of 256.",
+        "How many r's are in strawbery?",
         "Who was the first president of the United States?"
     ]
     
