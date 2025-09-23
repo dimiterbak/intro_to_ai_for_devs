@@ -2,6 +2,7 @@ from openai import OpenAI
 
 class ChatBot:
     def __init__(self, system=""):
+        self.number_of_prompts_sent = 0  # Initialize prompt counter
         self.system = system
         self.messages = []
         if self.system:
@@ -14,6 +15,9 @@ class ChatBot:
         return result
 
     def execute(self):
+        self.number_of_prompts_sent += 1
+        print("\n-- Prompt", self.number_of_prompts_sent, "--")
+        print("\n=== FULL PROMPT SENT TO MODEL ===")  
         # Show the complete prompt being sent to the model
         for i, msg in enumerate(self.messages, 1):
             # print(f"Message {i} ({msg['role']}):")
@@ -29,6 +33,8 @@ class ChatBot:
         # Uncomment this to print out token usage each time, e.g.
         # CompletionUsage(completion_tokens=27, prompt_tokens=225, total_tokens=252, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=0, audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=0), prompt_tokens_details=PromptTokensDetails(audio_tokens=0, cached_tokens=0))
         # print(response.usage)
+                
+        print("=== END OF PROMPT ===\n")
         return response.choices[0].message.content
         
 
@@ -49,11 +55,8 @@ def show_examples():
         print(example)
 
 
-def query(question, bot=None):
-
-    print("\n=== FULL PROMPT SENT TO MODEL ===")    
+def query(question, bot=None): 
     result = bot(question)
-    print("=== END OF PROMPT ===\n")
     return result
 
 def interactive_loop():
@@ -64,14 +67,11 @@ def interactive_loop():
     print("=" * 80)
     
     bot = ChatBot()  # Create one bot instance to maintain conversation history
-    
-    i = 0  # Prompt counter
+
     try:
         while True:
             user_query = input("\nYour question: ").strip()
             if user_query:  # Only process non-empty queries
-                i += 1
-                print("\n-- Prompt", i)
                 result = query(user_query, bot)
                 print(f"Answer: {result}")
             else:
