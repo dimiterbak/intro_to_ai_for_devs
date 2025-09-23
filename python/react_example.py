@@ -127,7 +127,8 @@ def show_examples():
     examples = [
         "What states does Ohio share borders with?",
         "Calculate the square root of 256.",
-        "Who was the first president of the United States?"
+        "Who was the first president of the United States?",
+        "How many r's are in strawberry?"
     ]
     
     for i, example in enumerate(examples, 1):
