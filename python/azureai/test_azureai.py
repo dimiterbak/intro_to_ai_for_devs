@@ -1,7 +1,9 @@
 import os
 from openai import OpenAI
 
-endpoint = "https://icb-genai-coe.cognitiveservices.azure.com/openai/v1/"
+# Make sure to set your environment variables accordingly
+# AZURE_OPENAI_ENDPOINT
+endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
 model_name = "gpt-35-turbo"
 deployment_name = "gpt-35-turbo"
 
