@@ -2,14 +2,14 @@ import os
 from openai import OpenAI
 
 # Make sure to set your environment variables accordingly
-# AZURE_OPENAI_ENDPOINT
-endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+# AZURE_AI_ENDPOINT
+endpoint = os.getenv("AZURE_AI_ENDPOINT")
 model_name = "gpt-35-turbo"
 deployment_name = "gpt-35-turbo"
 
 # set your environment variables accordingly
-# AZURE_OPENAI_API_KEY
-api_key = os.getenv("AZURE_OPENAI_API_KEY")
+# AZURE_AI_API_KEY
+api_key = os.getenv("AZURE_AI_API_KEY")
 
 client = OpenAI(
     base_url=f"{endpoint}",
