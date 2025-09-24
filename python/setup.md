@@ -28,16 +28,20 @@ source intro_to_ai/bin/activate
 uv pip install openai httpx
 ```
 
-## 3. Export your API key
+## 3. Export your environment variables
 
 Linux / macOS:
 ```
-export OPENAI_API_KEY="your_api_key_here"
+export AI_API_KEY="your_api_key_here"
+export AI_ENDPOINT="your_endpint_key_here"
+export DEPLOYMENT_NAME = "your_model_name-here"
 ```
 
 Windows PowerShell:
 ```
-setx OPENAI_API_KEY "your_api_key_here"
+setx AI_API_KEY "your_api_key_here"
+setx AI_ENDPOINT "your_endpint_key_here"
+setx DEPLOYMENT_NAME "your_model_name-here"
 ```
 
 ## 4. Run a simple test
