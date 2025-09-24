@@ -1,12 +1,19 @@
-from openai import OpenAI
 """
 This notebook demonstrates the setup and use of the ReAct prompting framework with OpenAI's API, following the implementation details from 
 [Simon Willison's learning log](https://til.simonwillison.net/llms/python-react-pattern).
 The ReAct pattern combines reasoning and acting, allowing the model to iteratively think about a problem, take actions (like looking up information), and refine its answers based on observations.
 """
+
+import os
+from openai import OpenAI
 import re
 import httpx
 
+
+# Make sure to set your environment variables accordingly
+ENDPOINT = os.getenv("AI_ENDPOINT")
+DEPLOYMENT_NAME = os.getenv("DEPLOYMENT_NAME")
+API_KEY = os.getenv("AI_API_KEY")
 
 class ChatBot:
     def __init__(self, system=""):
@@ -32,10 +39,13 @@ class ChatBot:
             print(f"  {msg['content']}")
             print()
         
-        client = OpenAI()
+        client = OpenAI(
+            base_url=f"{ENDPOINT}",
+            api_key=API_KEY
+        )
 
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model=DEPLOYMENT_NAME,
             messages=self.messages
         )
         # Uncomment this to print out token usage each time, e.g.

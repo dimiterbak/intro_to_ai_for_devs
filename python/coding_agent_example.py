@@ -1,7 +1,13 @@
+import os
 from pathlib import Path
 from openai import OpenAI
 import json
 from coding_agent_tools import CodingAgentTools
+
+# Make sure to set your environment variables accordingly
+ENDPOINT = os.getenv("AI_ENDPOINT")
+DEPLOYMENT_NAME = os.getenv("DEPLOYMENT_NAME")
+API_KEY = os.getenv("AI_API_KEY")
 
 class ChatBot:
     def __init__(self, system="", project_path=None):
@@ -164,11 +170,14 @@ class ChatBot:
             print(f"  {msg['content']}")
             print()
             
-        client = OpenAI()
+        client = OpenAI(
+            base_url=f"{ENDPOINT}",
+            api_key=API_KEY
+        )
 
         # Include tools in the API call
         response = client.chat.completions.create(
-            model="gpt-4o-mini",  # Fixed model name
+            model=DEPLOYMENT_NAME,
             messages=self.messages,
             tools=self.get_tool_definitions()
         )
