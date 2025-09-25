@@ -233,7 +233,7 @@ function showExamples(): void {
     const examples = [
         "Show me the file structure of this project",
         "Read the README.md file",
-        "Search for any Python files that contain 'OpenAI'",
+        "Search for any TypeScript files that contain 'OpenAI'",
         "What states does Ohio share borders with?",  // Regular question without tools
         "Create a simple hello world TypeScript script in a new file called hello.ts"
     ];
