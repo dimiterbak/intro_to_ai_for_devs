@@ -1,0 +1,23 @@
+{
+  "name": "intro-to-ai-node",
+  "version": "1.0.0",
+  "description": "Node.js TypeScript examples for AI development",
+  "main": "test_openai.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/test_openai.js",
+    "dev": "ts-node test_openai.ts",
+    "test": "npm run build && npm start"
+  },
+  "keywords": ["ai", "openai", "typescript", "node"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "openai": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.0.0"
+  }
+}
