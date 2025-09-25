@@ -28,7 +28,7 @@ interface ToolDefinition {
     };
 }
 
-class CodingAgentChatBot {
+class ChatBot {
     private numberOfPromptsSent: number = 0;
     private agentTools: CodingAgentTools;
     private system: string;
@@ -244,7 +244,7 @@ function showExamples(): void {
     }
 }
 
-async function query(question: string, bot: CodingAgentChatBot): Promise<string> {
+async function query(question: string, bot: ChatBot): Promise<string> {
     const responseMessage = await bot.call(question);
     
     // Check if the model wants to call a tool
@@ -296,7 +296,7 @@ async function interactiveLoop(): Promise<void> {
     console.log("I can help with file operations, code analysis, and general questions.");
     console.log("=".repeat(80));
 
-    const bot = new CodingAgentChatBot(
+    const bot = new ChatBot(
         "You are a helpful coding assistant with access to file system tools. You can read files, write files, see directory structures, execute bash commands, and search in files. Use these tools to help with coding tasks and file management."
     );
 
@@ -350,4 +350,4 @@ if (require.main === module) {
     main().catch(console.error);
 }
 
-export { CodingAgentChatBot, query, showExamples, interactiveLoop };
+export { ChatBot, query, showExamples, interactiveLoop };
