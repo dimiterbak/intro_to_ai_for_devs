@@ -9,17 +9,22 @@
     "dev": "ts-node test_openai.ts",
     "test": "npm run build && npm start",
     "chatbot": "ts-node chatbot_example.ts",
-    "chatbot:build": "tsc && node dist/chatbot_example.js"
+    "chatbot:build": "tsc && node dist/chatbot_example.js",
+    "react": "ts-node react_example.ts",
+    "react:build": "tsc && node dist/react_example.js"
   },
   "keywords": ["ai", "openai", "typescript", "node"],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "openai": "^4.0.0"
+    "openai": "^4.0.0",
+    "axios": "^1.0.0",
+    "readline-sync": "^1.4.10"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "typescript": "^5.0.0",
-    "ts-node": "^10.0.0"
+    "ts-node": "^10.0.0",
+    "@types/readline-sync": "^1.4.8"
   }
 }
