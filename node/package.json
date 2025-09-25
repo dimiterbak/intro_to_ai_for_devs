@@ -7,7 +7,9 @@
     "build": "tsc",
     "start": "node dist/test_openai.js",
     "dev": "ts-node test_openai.ts",
-    "test": "npm run build && npm start"
+    "test": "npm run build && npm start",
+    "chatbot": "ts-node chatbot_example.ts",
+    "chatbot:build": "tsc && node dist/chatbot_example.js"
   },
   "keywords": ["ai", "openai", "typescript", "node"],
   "author": "",
