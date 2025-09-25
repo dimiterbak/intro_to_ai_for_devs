@@ -13,7 +13,9 @@
     "coding-agent": "ts-node coding_agent_example.ts",
     "coding-agent:build": "tsc && node dist/coding_agent_example.js",
     "react": "ts-node react_example.ts",
-    "react:build": "tsc && node dist/react_example.js"
+    "react:build": "tsc && node dist/react_example.js",
+    "react-count": "ts-node exercises/react_count_example.ts",
+    "react-count:build": "tsc && node dist/exercises/react_count_example.js"
   },
   "keywords": ["ai", "openai", "typescript", "node"],
   "author": "",
