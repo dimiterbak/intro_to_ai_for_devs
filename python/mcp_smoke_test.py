@@ -52,10 +52,10 @@ async def main() -> None:
             def _norm(s: str) -> str:
                 return s.replace("_", "").replace("-", "").lower()
 
-            desired = _norm("sequential_thinking")
+            desired = _norm("sequentialthinking")
             tool_name = next((n for n in names if _norm(n) == desired), None)
             if not tool_name:
-                raise SystemExit("sequential_thinking tool not found on server")
+                raise SystemExit("sequentialthinking tool not found on server")
 
             result = await session.call_tool(tool_name, arguments=args)
 
