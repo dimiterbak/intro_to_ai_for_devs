@@ -11,24 +11,32 @@
     "chatbot": "ts-node chatbot_example.ts",
     "chatbot:build": "tsc && node dist/chatbot_example.js",
     "coding-agent": "ts-node coding_agent_example.ts",
+    "coding-agent:mcp": "ts-node coding_agent_mcp_example.ts",
     "coding-agent:build": "tsc && node dist/coding_agent_example.js",
     "react": "ts-node react_example.ts",
     "react:build": "tsc && node dist/react_example.js",
     "react-count": "ts-node exercises/react_count_example.ts",
     "react-count:build": "tsc && node dist/exercises/react_count_example.js"
   },
-  "keywords": ["ai", "openai", "typescript", "node"],
+  "keywords": [
+    "ai",
+    "openai",
+    "typescript",
+    "node"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "openai": "^4.0.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "axios": "^1.0.0",
+    "openai": "^4.0.0",
     "readline-sync": "^1.4.10"
   },
   "devDependencies": {
+    "@modelcontextprotocol/server-sequential-thinking": "^2025.7.1",
     "@types/node": "^20.0.0",
-    "typescript": "^5.0.0",
+    "@types/readline-sync": "^1.4.8",
     "ts-node": "^10.0.0",
-    "@types/readline-sync": "^1.4.8"
+    "typescript": "^5.0.0"
   }
 }
