@@ -1,0 +1,162 @@
+using OpenAI;
+using OpenAI.Chat;
+
+namespace DotNetOpenAI;
+
+/// <summary>
+/// ChatBot example mirroring the python/chatbot_example.py behavior.
+/// Maintains conversation history and allows interactive querying.
+/// Environment variables required:
+///   AI_ENDPOINT       - base endpoint (e.g. https://my-azure-openai.openai.azure.com/)
+///   DEPLOYMENT_NAME   - model deployment / model name
+///   AI_API_KEY        - API key
+/// </summary>
+public static class ChatBotExample
+{
+    private static string? Endpoint => Environment.GetEnvironmentVariable("AI_ENDPOINT");
+    private static string? DeploymentName => Environment.GetEnvironmentVariable("DEPLOYMENT_NAME");
+    private static string? ApiKey => Environment.GetEnvironmentVariable("AI_API_KEY");
+
+    public static async Task RunAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Endpoint) || string.IsNullOrWhiteSpace(DeploymentName) || string.IsNullOrWhiteSpace(ApiKey))
+        {
+            Console.WriteLine("Error: Please set AI_ENDPOINT, DEPLOYMENT_NAME, and AI_API_KEY environment variables.");
+            return;
+        }
+
+        ShowExamples();
+        await InteractiveLoopAsync();
+    }
+
+    private static void ShowExamples()
+    {
+        Console.WriteLine(new string('=', 80));
+        Console.WriteLine("CHATBOT EXAMPLES - Simple Q&A");
+        Console.WriteLine(new string('=', 80));
+
+        var examples = new[]
+        {
+            "What states does Ohio share borders with?",
+            "Calculate the square root of 256.",
+            "How many r's are in strawbery?",
+            "Who was the first president of the United States?"
+        };
+
+        for (int i = 0; i < examples.Length; i++)
+        {
+            Console.WriteLine($"\n--- Example {i + 1} ---");
+            Console.WriteLine(examples[i]);
+        }
+        Console.WriteLine();
+    }
+
+    private static OpenAIClient CreateClient() => new(new System.ClientModel.ApiKeyCredential(ApiKey!), new OpenAIClientOptions
+    {
+        Endpoint = new Uri(Endpoint!)
+    });
+
+    /// <summary>
+    /// Represents a simple chat session maintaining message history.
+    /// </summary>
+    private sealed class ChatSession
+    {
+        private readonly List<ChatMessage> _messages = new();
+        private readonly OpenAIClient _client;
+        private readonly string _deployment;
+        private int _promptCount = 0;
+
+        public ChatSession(OpenAIClient client, string deployment, string? system = null)
+        {
+            _client = client;
+            _deployment = deployment;
+            if (!string.IsNullOrWhiteSpace(system))
+            {
+                _messages.Add(new SystemChatMessage(system!));
+            }
+        }
+
+        public async Task<string> SendAsync(string userContent)
+        {
+            _messages.Add(new UserChatMessage(userContent));
+            _promptCount++;
+
+            Console.WriteLine($"\n-- Prompt {_promptCount} --");
+            Console.WriteLine("\n=== FULL PROMPT SENT TO MODEL ===");
+            foreach (var msg in _messages)
+            {
+                var role = msg switch
+                {
+                    SystemChatMessage => "system",
+                    UserChatMessage => "user",
+                    AssistantChatMessage => "assistant",
+                    _ => "other"
+                };
+
+                var content = string.Join("\n", msg.Content.Select(c => c.Text));
+                Console.WriteLine($"  {content}\n");
+            }
+
+            var chatClient = _client.GetChatClient(_deployment);
+            var response = await chatClient.CompleteChatAsync(_messages);
+
+            var assistantText = response.Value.Content[0].Text;
+            _messages.Add(new AssistantChatMessage(assistantText));
+
+            Console.WriteLine("=== END OF PROMPT ===\n");
+            return assistantText;
+        }
+    }
+
+    private static async Task InteractiveLoopAsync()
+    {
+        Console.WriteLine(new string('=', 80));
+        Console.WriteLine("INTERACTIVE CHATBOT - Have a conversation!");
+        Console.WriteLine("Type your questions and press Enter. Ctrl+C to exit.");
+        Console.WriteLine(new string('=', 80));
+
+        var client = CreateClient();
+        var session = new ChatSession(client, DeploymentName!);
+
+        try
+        {
+            while (true)
+            {
+                Console.Write("\nYour question: ");
+                var input = Console.ReadLine();
+                if (input == null)
+                {
+                    Console.WriteLine("\nGoodbye! Thanks for chatting!");
+                    break;
+                }
+                input = input.Trim();
+                if (input.Length == 0)
+                {
+                    Console.WriteLine("Please enter a question.");
+                    continue;
+                }
+
+                string answer;
+                try
+                {
+                    answer = await session.SendAsync(input);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error calling model: {ex.Message}");
+                    continue;
+                }
+
+                Console.WriteLine($"Answer: {answer}");
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Console.WriteLine("\nGoodbye! Thanks for chatting!");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Unexpected error: {ex.Message}");
+        }
+    }
+}
