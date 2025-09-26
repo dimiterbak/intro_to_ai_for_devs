@@ -137,7 +137,7 @@ class ChatBot:
             {
                 "type": "function",
                 "function": {
-                    "name": "sequential_thinking",
+                    "name": "sequentialthinking",
                     "description": "Facilitates a detailed, step-by-step thinking process for problem-solving and analysis using an MCP server.",
                     "parameters": {
                         "type": "object",
@@ -182,7 +182,7 @@ class ChatBot:
                 pattern = arguments["pattern"]
                 root_dir = arguments.get("root_dir", ".")
                 return self.agent_tools.search_in_files(pattern, root_dir)
-            elif tool_name == "sequential_thinking":
+            elif tool_name == "sequentialthinking":
                 return self._call_sequential_thinking(arguments)
             else:
                 return f"Unknown tool: {tool_name}"
@@ -190,9 +190,9 @@ class ChatBot:
             return f"Error executing {tool_name}: {str(e)}"
 
     def _call_sequential_thinking(self, args: dict[str, Any]):
-        """Bridge call to the sequential_thinking MCP server via stdio.
+        """Bridge call to the sequentialthinking MCP server via stdio.
 
-        This launches the MCP server using npx and calls its 'sequential_thinking' tool.
+        This launches the MCP server using npx and calls its 'sequentialthinking' tool.
         Returns either structured content (dict) or a text summary string.
         """
         if not _MCP_AVAILABLE:
@@ -221,9 +221,9 @@ class ChatBot:
                         def _norm(name: str) -> str:
                             return name.replace("_", "").replace("-", "").lower()
 
-                        desired_norm = _norm("sequential_thinking")
-                        chosen_name = "sequential_thinking"  # default
-                        candidates = ["sequential_thinking", "sequential-thinking", "sequentialthinking"]
+                        desired_norm = _norm("sequentialthinking")
+                        chosen_name = "sequentialthinking"  # default
+                        candidates = ["sequentialthinking", "sequential-thinking", "sequential_thinking"]
                         try:
                             tools = await session.list_tools()
                             available = [t.name for t in tools.tools]
@@ -289,7 +289,7 @@ class ChatBot:
                     "and available in PATH. Try: brew install node"
                 )
             except Exception as e:
-                return f"Error calling sequential_thinking via MCP: {e}"
+                return f"Error calling sequentialthinking via MCP: {e}"
 
         # Run the async client
         return asyncio.run(_run())
