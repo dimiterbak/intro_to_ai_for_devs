@@ -204,7 +204,7 @@ def show_examples():
     
     for i, example in enumerate(examples, 1):
         print(f"\n--- Example {i} ---")
-        print(f"Question: {example}")
+        print(f"{example}")
 
 
 def query(question, bot):
