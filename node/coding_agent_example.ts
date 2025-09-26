@@ -245,15 +245,31 @@ function showExamples(): void {
 }
 
 async function query(question: string, bot: ChatBot): Promise<string> {
-    const responseMessage = await bot.call(question);
+    let responseMessage = await bot.call(question);
     
-    // Check if the model wants to call a tool
+    // Keep handling tool calls until the model returns a final answer
+    const maxToolCycles = 8;
+    let cycles = 0;
+    const toolResultsAccum: string[] = [];
+
+    while (true) {
     if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
+            cycles += 1;
+            if (cycles > maxToolCycles) {
+                // Safety fallback: break out and return a summary of the last tool output if any
+                const last = toolResultsAccum[toolResultsAccum.length - 1];
+                const summary = last
+                    ? "Stopped after max tool cycles. Latest tool result:\n" + last
+                    : (responseMessage.content || "Stopped after max tool cycles with no final content.");
+                bot.messages.push({ role: "assistant", content: summary });
+                return summary;
+            }
+
         // Add the assistant's response to conversation history
         bot.messages.push({
             role: "assistant",
             content: responseMessage.content || "",
-            tool_calls: responseMessage.tool_calls
+                tool_calls: responseMessage.tool_calls,
         });
         
         // Execute each tool call
@@ -264,28 +280,34 @@ async function query(question: string, bot: ChatBot): Promise<string> {
             console.log(`🔧 Executing tool: ${functionName} with args:`, functionArgs);
             
             // Execute the tool
-            const toolResult = bot.executeTool(functionName, functionArgs);
+                const toolResult = await bot.executeTool(functionName, functionArgs);
+
+                // Keep a readable transcript of tool outputs
+                const display = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult, null, 2);
+                toolResultsAccum.push(display);
             
             // Add tool result to conversation
             bot.messages.push({
                 role: "tool",
-                content: typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult),
-                tool_call_id: toolCall.id
+                    content: display,
+                    tool_call_id: toolCall.id,
             });
         }
         
-        // Get final response from the model after tool execution
-        const finalResponse = await bot.execute();
-        
-        const finalContent = finalResponse.content || "";
-        bot.messages.push({ role: "assistant", content: finalContent });
-        return finalContent;
-    }
-    
-    // No tool calls, return the response directly
-    const content = responseMessage.content || "";
+            // Ask the model again with new tool results
+            responseMessage = await bot.execute();
+            continue;
+        }
+
+        // No more tool calls, return the final content (or a fallback summary)
+        let content = responseMessage.content || "";
+        if (!content && toolResultsAccum.length > 0) {
+            const last = toolResultsAccum[toolResultsAccum.length - 1];
+            content = "No final model answer was returned. Here's the latest Sequential Thinking result:\n" + last;
+        }
     bot.messages.push({ role: "assistant", content });
     return content;
+    }
 }
 
 async function interactiveLoop(): Promise<void> {
