@@ -28,7 +28,15 @@ source intro_to_ai/bin/activate
 uv pip install openai httpx
 ```
 
-## 3. Export your environment variables
+## 3. Install MCP client for Sequential Thinking demo
+
+You need Node.js with `npx` on your PATH and the MCP Python SDK:
+```
+brew install node   # macOS (or use your OS package manager)
+uv pip install "mcp[cli]"
+```
+
+## 4. Export your environment variables
 
 Linux / macOS:
 ```
@@ -44,7 +52,7 @@ setx AI_ENDPOINT "your_endpint_key_here"
 setx DEPLOYMENT_NAME "your_model_name-here"
 ```
 
-## 4. Run a simple test
+## 5. Run a simple test
 
 Create a test_openai.py file:
 
@@ -67,3 +75,14 @@ python test_openai.py
 ```
 
 If everything is set up correctly, you’ll see a reply from the model.
+
+## 6. (Optional) MCP smoke test
+
+Verify the Sequential Thinking MCP server runs and responds:
+```
+python mcp_smoke_test.py
+```
+If it fails saying `npx` not found, install Node.js. If it says `mcp` not installed, run:
+```
+uv pip install "mcp[cli]"
+```
