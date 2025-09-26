@@ -210,44 +210,62 @@ def show_examples():
 def query(question, bot):
 
     response_message = bot(question)
-    
-    # Check if the model wants to call a tool
-    if response_message.tool_calls:
-        # Add the assistant's response to conversation history
-        bot.messages.append({
-            "role": "assistant", 
-            "content": response_message.content,
-            "tool_calls": response_message.tool_calls
-        })
-        
-        # Execute each tool call
-        for tool_call in response_message.tool_calls:
-            function_name = tool_call.function.name
-            function_args = json.loads(tool_call.function.arguments)
-            
-            print(f"🔧 Executing tool: {function_name} with args: {function_args}")
-            
-            # Execute the tool
-            tool_result = bot.execute_tool(function_name, function_args)
-            
-            # Add tool result to conversation
+
+    # Keep handling tool calls until the model returns a final answer
+    max_tool_cycles = 8
+    cycles = 0
+    tool_results_accum: list[str] = []
+
+    while True:
+        if response_message.tool_calls:
+            cycles += 1
+            if cycles > max_tool_cycles:
+                break
+
+            # Add the assistant's response to conversation history
             bot.messages.append({
-                "role": "tool",
-                "content": json.dumps(tool_result) if not isinstance(tool_result, str) else tool_result,
-                "tool_call_id": tool_call.id
+                "role": "assistant",
+                # content may be None when tool-calling
+                "content": response_message.content or "",
+                "tool_calls": response_message.tool_calls,
             })
-        
-        # Get final response from the model after tool execution
-        final_response = bot.execute()
-        
-        final_content = final_response.content
-        bot.messages.append({"role": "assistant", "content": final_content})
-        return final_content
-    
-    # No tool calls, return the response directly
-    content = response_message.content
-    bot.messages.append({"role": "assistant", "content": content})
-    return content
+
+            # Execute each tool call
+            for tool_call in response_message.tool_calls:
+                function_name = tool_call.function.name
+                function_args = json.loads(tool_call.function.arguments)
+
+                print(f"🔧 Executing tool: {function_name} with args: {function_args}")
+
+                # Execute the tool
+                tool_result = bot.execute_tool(function_name, function_args)
+
+                # Keep a readable transcript of tool outputs
+                display = tool_result if isinstance(tool_result, str) else json.dumps(tool_result, indent=2)
+                tool_results_accum.append(display)
+
+                # Add tool result to conversation
+                bot.messages.append({
+                    "role": "tool",
+                    "content": display,
+                    "tool_call_id": tool_call.id,
+                })
+
+            # Ask the model again with new tool results
+            response_message = bot.execute()
+            continue
+
+        # No more tool calls, return the final content (or a fallback summary)
+        content = response_message.content or ""
+        if not content and tool_results_accum:
+            # Fallback summary if the model didn't produce a final message
+            last = tool_results_accum[-1]
+            content = (
+                "No final model answer was returned. Here's the latest Sequential Thinking result:\n" 
+                + (last if isinstance(last, str) else json.dumps(last))
+            )
+        bot.messages.append({"role": "assistant", "content": content})
+        return content
 
 def interactive_loop():
     # Main interactive loop for user queries
