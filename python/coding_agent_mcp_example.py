@@ -414,6 +414,10 @@ def interactive_loop():
     print("INTERACTIVE CODING AGENT - Have a conversation!")
     print("Type your questions and press Enter. Use Ctrl+C to exit.")
     print("I can help with file operations, code analysis, and general questions.")
+    print()
+    print("Tips:")
+    print("- Single-line: type and press Enter.")
+    print("- Multi-line: type /ml and press Enter, then paste lines; finish with /end (or ---) on its own line.")
     print("=" * 80)
 
     bot = ChatBot(system="You are a helpful coding assistant with access to file system tools. You can read files, write files, see directory structures, execute bash commands, and search in files. Use these tools to help with coding tasks and file management.")  # Create one bot instance to maintain conversation history
@@ -422,6 +426,27 @@ def interactive_loop():
     try:
         while True:
             user_query = input("\nYour question: ").strip()
+
+            # Enter multi-line mode if requested
+            if user_query.lower() == "/ml":
+                print("Enter multi-line input. Finish with /end or --- on a line by itself.")
+                lines: list[str] = []
+                while True:
+                    try:
+                        line = input()
+                    except EOFError:
+                        # Treat EOF as end of multi-line input
+                        break
+                    if line.strip() in {"/end", "---"}:
+                        break
+                    lines.append(line)
+                user_query = "\n".join(lines).strip()
+
+            # Allow quick exit commands
+            if user_query.lower() in {"/exit", "/quit"}:
+                print("Exiting...")
+                break
+
             if user_query:  # Only process non-empty queries
                 result = query(user_query, bot)
                 print(f"Answer: {result}")
