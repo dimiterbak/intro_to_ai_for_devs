@@ -351,7 +351,7 @@ function showExamples(): void {
     
     for (let i = 0; i < examples.length; i++) {
         console.log(`\n--- Example ${i + 1} ---`);
-        console.log(`Question: ${examples[i]}`);
+        console.log(`${examples[i]}`);
     }
 }
 
