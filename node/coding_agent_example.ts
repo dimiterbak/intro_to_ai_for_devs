@@ -294,6 +294,10 @@ async function interactiveLoop(): Promise<void> {
     console.log("INTERACTIVE CODING AGENT - Have a conversation!");
     console.log("Type your questions and press Enter. Use Ctrl+C to exit.");
     console.log("I can help with file operations, code analysis, and general questions.");
+    console.log("Tips:");
+    console.log("- Single-line: type and press Enter.");
+    console.log("- Multi-line: type /ml and press Enter, then paste lines; finish with /end (or ---) on its own line.");
+    console.log("- Exit: type /exit or /quit.");
     console.log("=".repeat(80));
 
     const bot = new ChatBot(
@@ -307,8 +311,26 @@ async function interactiveLoop(): Promise<void> {
 
     const askQuestion = (): Promise<string> => {
         return new Promise((resolve) => {
-            rl.question("\nYour question: ", (answer) => {
-                resolve(answer.trim());
+            rl.question("\nYour question: ", async (answer) => {
+                const first = (answer ?? "").trim();
+                if (first.toLowerCase() === "/ml") {
+                    console.log("Enter multi-line input. Finish with /end or --- on a line by itself.");
+                    const lines: string[] = [];
+                    const askMore = (): void => {
+                        rl.question("", (line) => {
+                            const trimmed = (line ?? "").trim();
+                            if (trimmed === "/end" || trimmed === "---") {
+                                resolve(lines.join("\n").trim());
+                            } else {
+                                lines.push(line);
+                                askMore();
+                            }
+                        });
+                    };
+                    askMore();
+                } else {
+                    resolve(first);
+                }
             });
         });
     };
@@ -316,6 +338,11 @@ async function interactiveLoop(): Promise<void> {
     try {
         while (true) {
             const userQuery = await askQuestion();
+            // Allow quick exit commands
+            if (userQuery.toLowerCase() === "/exit" || userQuery.toLowerCase() === "/quit") {
+                console.log("Exiting...");
+                break;
+            }
             if (userQuery) { // Only process non-empty queries
                 const result = await query(userQuery, bot);
                 console.log(`Answer: ${result}`);
