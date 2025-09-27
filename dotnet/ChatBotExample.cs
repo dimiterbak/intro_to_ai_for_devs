@@ -103,6 +103,21 @@ public static class ChatBotExample
             var assistantText = response.Value.Content[0].Text;
             _messages.Add(new AssistantChatMessage(assistantText));
 
+            // Print out token usage each time (pretty-printed; SDK shapes may vary)
+            var usage = response.Value.Usage;
+            if (usage is not null)
+            {
+                Console.WriteLine("Token usage:");
+                var props = usage.GetType().GetProperties();
+                foreach (var p in props)
+                {
+                    object? val = null;
+                    try { val = p.GetValue(usage); }
+                    catch { /* ignore */ }
+                    Console.WriteLine($"  {p.Name}: {val}");
+                }
+            }
+        
             Console.WriteLine("=== END OF PROMPT ===\n");
             return assistantText;
         }
