@@ -5,7 +5,7 @@ using System.Text.Json;
 namespace DotNetOpenAI;
 
 /// <summary>
-/// A C# port of python/coding_agent_example.py using tools (function calling).
+/// A Coding Agent using tools (function calling).
 /// It exposes filesystem and shell tools and lets the model call them iteratively
 /// until a final answer is produced.
 /// </summary>
