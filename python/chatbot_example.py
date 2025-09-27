@@ -74,13 +74,38 @@ def interactive_loop():
     print("=" * 80)
     print("INTERACTIVE CHATBOT - Have a conversation!")
     print("Type your questions and press Enter. Use Ctrl+C to exit.")
+    print("Tips:")
+    print("- Single-line: type and press Enter.")
+    print("- Multi-line: type /ml and press Enter, then paste lines; finish with /end (or ---) on its own line.")
+    print("- Exit: type /exit or /quit.")
     print("=" * 80)
     
     bot = ChatBot()  # Create one bot instance to maintain conversation history
 
     try:
         while True:
-            user_query = input("\nYour question: ").strip()
+            first = input("\nYour question: ").strip()
+
+            # Handle multi-line input mode
+            if first.lower() == "/ml":
+                print("Enter multi-line input. Finish with /end or --- on a line by itself.")
+                lines = []
+                while True:
+                    line = input()
+                    trimmed = (line or "").strip()
+                    if trimmed in ("/end", "---"):
+                        user_query = "\n".join(lines).strip()
+                        break
+                    else:
+                        lines.append(line)
+            else:
+                user_query = first
+
+            # Allow quick exit commands
+            if user_query.lower() in ("/exit", "/quit"):
+                print("Exiting...")
+                break
+
             if user_query:  # Only process non-empty queries
                 result = query(user_query, bot)
                 print(f"Answer: {result}")
