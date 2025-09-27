@@ -5,6 +5,7 @@ import json
 import asyncio
 from typing import Any
 from coding_agent_tools import CodingAgentTools
+from types import SimpleNamespace
 
 # Optional MCP client imports (installed via `mcp[cli]`)
 try:
@@ -316,15 +317,21 @@ class ChatBot:
             api_key=API_KEY
         )
 
-        # Include tools in the API call
-        response = client.chat.completions.create(
-            model=DEPLOYMENT_NAME,
-            messages=self.messages,
-            tools=self.get_tool_definitions()
-        )
-        
-        print("=== END OF PROMPT ===\n")
-        return response.choices[0].message
+        try:
+            # Include tools in the API call
+            response = client.chat.completions.create(
+                model=DEPLOYMENT_NAME,
+                messages=self.messages,
+                tools=self.get_tool_definitions()
+            )
+            print("=== END OF PROMPT ===\n")
+            return response.choices[0].message
+        except Exception as e:
+            # Catch and print any error from the API call instead of crashing
+            print("=== END OF PROMPT ===\n")
+            print(f"Error during model call: {e}")
+            # Return a minimal message-like object to keep the flow working
+            return SimpleNamespace(content=f"Error: {e}", tool_calls=None)
         
 
 def show_examples():
