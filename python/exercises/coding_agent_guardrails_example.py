@@ -1,0 +1,398 @@
+import os
+import re
+from pathlib import Path
+from openai import OpenAI
+import json
+import sys
+
+# Ensure parent directory is on sys.path so we can import coding_agent_tools when running this file directly
+CURRENT_DIR = Path(__file__).resolve().parent
+PARENT_DIR = CURRENT_DIR.parent
+if str(PARENT_DIR) not in sys.path:
+    sys.path.insert(0, str(PARENT_DIR))
+
+from coding_agent_tools import CodingAgentTools
+from types import SimpleNamespace
+
+# Make sure to set your environment variables accordingly
+ENDPOINT = os.getenv("AI_ENDPOINT")
+DEPLOYMENT_NAME = os.getenv("DEPLOYMENT_NAME")
+API_KEY = os.getenv("AI_API_KEY")
+
+class ChatBot:
+    def __init__(self, system="", project_path=None):
+        self.number_of_prompts_sent = 0  # Initialize prompt counter
+        if project_path is None:
+            project_path = Path.cwd()  # Use current working directory as default
+        self.agent_tools = CodingAgentTools(Path(project_path))
+        defaultSystem = (
+            "You are a helpful coding assistant with access to file system tools. "
+            "Only use tools for file operations, code analysis, project navigation, or when the user explicitly asks you to run a shell command. "
+            "Do NOT use tools for general knowledge questions; answer from your own knowledge unless the user specifically references files, paths, or commands."
+        )
+        self.system = system or defaultSystem
+        self.messages = []
+        if self.system:
+            self.messages.append({"role": "system", "content": self.system})
+
+    def get_tool_definitions(self):
+        """Convert agent tools to OpenAI function calling format"""
+        return [
+            {
+                "type": "function",
+                "function": {
+                    "name": "read_file",
+                    "description": "Read and return the contents of a file at the given relative filepath. Prefer this over running shell commands like 'cat'.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "filepath": {
+                                "type": "string",
+                                "description": "Path to the file, relative to the project directory"
+                            }
+                        },
+                        "required": ["filepath"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "write_file",
+                    "description": "Write content to a file at the given relative filepath, creating directories as needed",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "filepath": {
+                                "type": "string",
+                                "description": "Path to the file, relative to the project directory"
+                            },
+                            "content": {
+                                "type": "string",
+                                "description": "Content to write to the file"
+                            }
+                        },
+                        "required": ["filepath", "content"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "see_file_tree",
+                    "description": "Return a list of all files and directories under the given root directory",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "root_dir": {
+                                "type": "string",
+                                "description": "Root directory to list from, relative to the project directory",
+                                "default": "."
+                            }
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "execute_bash_command",
+                    "description": "Execute a bash command in the shell and return its output, error, and exit code. Only use when the user explicitly asks to run a shell/terminal command. Prefer read_file/search_in_files for reading content.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "command": {
+                                "type": "string",
+                                "description": "The bash command to execute"
+                            },
+                            "cwd": {
+                                "type": "string",
+                                "description": "Working directory to run the command in, relative to the project directory"
+                            }
+                        },
+                        "required": ["command"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "search_in_files",
+                    "description": "Search for a pattern in all files under the given root directory",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "pattern": {
+                                "type": "string",
+                                "description": "Pattern to search for in files"
+                            },
+                            "root_dir": {
+                                "type": "string",
+                                "description": "Root directory to search from, relative to the project directory",
+                                "default": "."
+                            }
+                        },
+                        "required": ["pattern"]
+                    }
+                }
+            }
+        ]
+
+    def execute_tool(self, tool_name, arguments):
+        """Execute a tool function with the given arguments"""
+        try:
+            if tool_name == "read_file":
+                return self.agent_tools.read_file(arguments["filepath"])
+            elif tool_name == "write_file":
+                self.agent_tools.write_file(arguments["filepath"], arguments["content"])
+                return f"Successfully wrote to {arguments['filepath']}"
+            elif tool_name == "see_file_tree":
+                root_dir = arguments.get("root_dir", ".")
+                return self.agent_tools.see_file_tree(root_dir)
+            elif tool_name == "execute_bash_command":
+                # Only allow if the user explicitly asked to run a shell/terminal command
+                last_user = None
+                for msg in reversed(self.messages):
+                    if msg.get("role") == "user":
+                        last_user = msg
+                        break
+
+                text = (last_user.get("content") if last_user else "") or ""
+                text = text.lower()
+                explicit = re.search(r"(bash|shell|terminal|run|execute|npm|node|yarn|pnpm|pip|python|pytest|ts-node|tsc|make|gradle|cargo|go\s+run|go\s+build)", text)
+                if not explicit:
+                    # Mirror TS version: block unless explicitly requested
+                    return {
+                        "stdout": "",
+                        "stderr": "Blocked: bash commands require explicit user request. Please proceed without execute_bash_command.",
+                        "returncode": 1
+                    }
+
+                command = arguments["command"]
+                cwd = arguments.get("cwd")
+                stdout, stderr, returncode = self.agent_tools.execute_bash_command(command, cwd)
+                return {
+                    "stdout": stdout,
+                    "stderr": stderr,
+                    "returncode": returncode
+                }
+            elif tool_name == "search_in_files":
+                pattern = arguments["pattern"]
+                root_dir = arguments.get("root_dir", ".")
+                return self.agent_tools.search_in_files(pattern, root_dir)
+            else:
+                return f"Unknown tool: {tool_name}"
+        except Exception as e:
+            return f"Error executing {tool_name}: {str(e)}"
+
+    def should_enable_tools_for_next_turn(self) -> bool:
+        """Heuristic: expose tools only if the last user message suggests file/shell intent.
+
+        Examples that SHOULD enable tools: mentions of reading/writing/creating files, searching, grep,
+        file tree, directories/paths, opening files, running shell/CLI commands, common package managers,
+        programming file extensions, or path-like tokens.
+        """
+        # Find the last user message
+        last_user = None
+        for msg in reversed(self.messages):
+            if msg.get("role") == "user":
+                last_user = msg
+                break
+
+        # If there's no user message yet, allow tools (safe default)
+        if not last_user:
+            return True
+
+        text = (last_user.get("content") or "").lower()
+        tool_intents = [
+            "read file", "write file", "create file", "append to file", "search", "grep", "file tree",
+            "directory", "path", "open", "bash", "shell", "terminal", "run", "execute", "npm", "node",
+            "ts-node", "tsc", "yarn", "pnpm", "pip", "python", "pytest", "make", "gradle", "cargo", "go run", "go build", ".ts", ".js", ".json",
+            ".py", ".md", "/", "\\"
+        ]
+        return any(w in text for w in tool_intents)
+
+    def __call__(self, message):
+        self.messages.append({"role": "user", "content": message})
+        response_message = self.execute()
+        
+        # Return the response message object for query() to handle tool calling
+        return response_message
+
+    def execute(self):
+        self.number_of_prompts_sent += 1
+        print("\n-- Prompt", self.number_of_prompts_sent, "--")
+        print("\n=== FULL PROMPT SENT TO MODEL ===")  
+        # Show the complete prompt being sent to the model
+        for i, msg in enumerate(self.messages, 1):
+            # print(f"Message {i} ({msg['role']}):")
+            print(f"  {msg['content']}")
+            print()
+            
+        client = OpenAI(
+            base_url=f"{ENDPOINT}",
+            api_key=API_KEY
+        )
+
+        try:
+            # Conditionally include tools in the API call
+            include_tools = self.should_enable_tools_for_next_turn()
+            if include_tools:
+                response = client.chat.completions.create(
+                    model=DEPLOYMENT_NAME,
+                    messages=self.messages,
+                    tools=self.get_tool_definitions()
+                )
+            else:
+                response = client.chat.completions.create(
+                    model=DEPLOYMENT_NAME,
+                    messages=self.messages
+                )
+            print("=== END OF PROMPT ===\n")
+            return response.choices[0].message
+        except Exception as e:
+            # Catch and print any error from the API call instead of crashing
+            print("=== END OF PROMPT ===\n")
+            print(f"Error during model call: {e}")
+            # Return a minimal message-like object to keep the flow working
+            return SimpleNamespace(content=f"Error: {e}", tool_calls=None)
+        
+
+def show_examples():
+    """Run some example queries to demonstrate the system"""
+    print("=" * 80)
+    print("CHATBOT EXAMPLES - Tool-Enabled Coding Agent")
+    print("=" * 80)
+    
+    examples = [
+        "Show me the file structure of this project",
+        "Read the README.md file",
+        "Search for any Python files that contain 'OpenAI'",
+        "What states does Ohio share borders with?",  # Regular question without tools
+        "Create a simple hello world Python script in a new file called hello.py"
+    ]
+    
+    bot = ChatBot(system="You are a helpful coding assistant with access to file system tools. Use the available tools to help with coding tasks.")
+    
+    for i, example in enumerate(examples, 1):
+        print(f"\n--- Example {i} ---")
+        print(f"{example}")
+
+
+def query(question, bot):
+
+    response_message = bot(question)
+
+    # Keep handling tool calls until the model returns a final answer
+    max_tool_cycles = 8
+    cycles = 0
+    tool_results_accum: list[str] = []
+
+    while True:
+        if response_message.tool_calls:
+            cycles += 1
+            if cycles > max_tool_cycles:
+                break
+
+            # Add the assistant's response to conversation history
+            bot.messages.append({
+                "role": "assistant",
+                # content may be None when tool-calling
+                "content": response_message.content or "",
+                "tool_calls": response_message.tool_calls,
+            })
+
+            # Execute each tool call
+            for tool_call in response_message.tool_calls:
+                function_name = tool_call.function.name
+                function_args = json.loads(tool_call.function.arguments)
+
+                print(f"🔧 Executing tool: {function_name} with args: {function_args}")
+
+                # Execute the tool
+                tool_result = bot.execute_tool(function_name, function_args)
+
+                # Keep a readable transcript of tool outputs
+                display = tool_result if isinstance(tool_result, str) else json.dumps(tool_result, indent=2)
+                tool_results_accum.append(display)
+
+                # Add tool result to conversation
+                bot.messages.append({
+                    "role": "tool",
+                    "content": display,
+                    "tool_call_id": tool_call.id,
+                })
+
+            # Ask the model again with new tool results
+            response_message = bot.execute()
+            continue
+
+        # No more tool calls, return the final content (or a fallback summary)
+        content = response_message.content or ""
+        if not content and tool_results_accum:
+            # Fallback summary if the model didn't produce a final message
+            last = tool_results_accum[-1]
+            content = (
+                "No final model answer was returned. Here's the latest Sequential Thinking result:\n" 
+                + (last if isinstance(last, str) else json.dumps(last))
+            )
+        bot.messages.append({"role": "assistant", "content": content})
+        return content
+
+def interactive_loop():
+    # Main interactive loop for user queries
+    print("=" * 80)
+    print("INTERACTIVE CODING AGENT - Have a conversation!")
+    print("Type your questions and press Enter. Use Ctrl+C to exit.")
+    print("I can help with file operations, code analysis, and general questions.")
+    print()
+    print("Tips:")
+    print("- Single-line: type and press Enter.")
+    print("- Multi-line: type /ml and press Enter, then paste lines; finish with /end (or ---) on its own line.")
+    print("=" * 80)
+
+    bot = ChatBot() # Initialize bot with default system prompt
+    
+    i = 0  # Prompt counter
+    try:
+        while True:
+            user_query = input("\nYour question: ").strip()
+
+            # Enter multi-line mode if requested
+            if user_query.lower() == "/ml":
+                print("Enter multi-line input. Finish with /end or --- on a line by itself.")
+                lines: list[str] = []
+                while True:
+                    try:
+                        line = input()
+                    except EOFError:
+                        # Treat EOF as end of multi-line input
+                        break
+                    if line.strip() in {"/end", "---"}:
+                        break
+                    lines.append(line)
+                user_query = "\n".join(lines).strip()
+
+            # Allow quick exit commands
+            if user_query.lower() in {"/exit", "/quit"}:
+                print("Exiting...")
+                break
+
+            if user_query:  # Only process non-empty queries
+                result = query(user_query, bot)
+                print(f"Answer: {result}")
+            else:
+                print("Please enter a question.")
+    except KeyboardInterrupt:
+        print("\n\nGoodbye! Thanks for chatting!")
+    except EOFError:
+        print("\n\nGoodbye! Thanks for chatting!")
+
+if __name__ == '__main__':
+
+    # First show examples
+    show_examples()
+    
+    # Then start interactive mode
+    interactive_loop()
