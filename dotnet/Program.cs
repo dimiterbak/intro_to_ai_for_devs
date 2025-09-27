@@ -30,6 +30,11 @@ if (args.Length > 0)
         case "codingagentguardrailsexample":
             await CodingAgentGuardrailsExample.RunAsync();
             break;
+        case "codingagentmcp":
+        case "coding_agent_mcp":
+        case "codingagentmcpexample":
+            await CodingAgentMCPExample.RunAsync();
+            break;
         case "help":
         case "--help":
         case "-h":
