@@ -39,11 +39,15 @@ class ChatBot {
         this.numberOfPromptsSent = 0;
         const resolvedProjectPath = projectPath || process.cwd();
         this.agentTools = new CodingAgentTools(resolvedProjectPath);
-        this.system = system;
+        const defaultSystem =
+            "You are a helpful coding assistant with access to file system tools. " +
+            "Only use tools for file operations, code analysis, project navigation, or when the user explicitly asks you to run a shell command. " +
+            "Do NOT use tools for general knowledge questions; answer from your own knowledge unless the user specifically references files, paths, or commands.";
+        this.system = system || defaultSystem;
         this.messages = [];
         
         if (this.system) {
-            this.messages.push({ role: "system", content: system });
+            this.messages.push({ role: "system", content: this.system });
         }
 
         this.client = new OpenAI({
@@ -61,7 +65,7 @@ class ChatBot {
                 type: "function",
                 function: {
                     name: "read_file",
-                    description: "Read and return the contents of a file at the given relative filepath",
+                    description: "Read and return the contents of a file at the given relative filepath. Prefer this over running shell commands like 'cat'.",
                     parameters: {
                         type: "object",
                         properties: {
@@ -117,7 +121,7 @@ class ChatBot {
                 type: "function",
                 function: {
                     name: "execute_bash_command",
-                    description: "Execute a bash command in the shell and return its output, error, and exit code",
+                    description: "Execute a bash command in the shell and return its output, error, and exit code. Only use when the user explicitly asks to run a shell/terminal command. Prefer read_file/search_in_files for reading content.",
                     parameters: {
                         type: "object",
                         properties: {
@@ -200,6 +204,18 @@ class ChatBot {
                 }
 
                 case "execute_bash_command": {
+                    // Only allow if the user explicitly asked to run a shell/terminal command
+                    const lastUser = [...this.messages].reverse().find(m => m.role === 'user');
+                    const text = (lastUser?.content || '').toLowerCase();
+                    const explicit = /(bash|shell|terminal|run|execute|npm|node|yarn|pnpm|pip|python|pytest|ts-node|tsc|make|gradle|cargo|go\s+run|go\s+build)/.test(text);
+                    if (!explicit) {
+                        const blocked: CommandResult = {
+                            stdout: "",
+                            stderr: "Blocked: bash commands require explicit user request. Please proceed without execute_bash_command.",
+                            returncode: 1
+                        };
+                        return blocked;
+                    }
                     const command = args.command;
                     const cwd = args.cwd;
                     return this.agentTools.executeBashCommand(command, cwd);
@@ -313,6 +329,19 @@ class ChatBot {
         return responseMessage;
     }
 
+    // Heuristic: only enable tools when the user's last message suggests file/shell intent
+    private shouldEnableToolsForNextTurn(): boolean {
+        const lastUser = [...this.messages].reverse().find(m => m.role === 'user');
+        if (!lastUser) return true;
+        const text = (lastUser.content || '').toLowerCase();
+        const toolIntents = [
+            'read file', 'write file', 'create file', 'append to file', 'search', 'grep', 'file tree', 'directory', 'path', 'open',
+            'bash', 'shell', 'terminal', 'run', 'execute', 'npm', 'node', 'ts-node', 'tsc', 'yarn', 'pnpm', 'pip', 'python', 'pytest',
+            '.ts', '.js', '.json', '.py', '.md', '/', '\\'
+        ];
+        return toolIntents.some(w => text.includes(w));
+    }
+
     async execute(): Promise<OpenAI.Chat.Completions.ChatCompletionMessage> {
         this.numberOfPromptsSent++;
         console.log(`\n-- Prompt ${this.numberOfPromptsSent} --`);
@@ -324,15 +353,19 @@ class ChatBot {
             console.log();
         });
 
-        // Include tools in the API call
-        const response = await this.client.chat.completions.create({
+        // Include tools only when appropriate
+        const includeTools = this.shouldEnableToolsForNextTurn();
+        const request: any = {
             model: DEPLOYMENT_NAME!,
             messages: this.messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
-            tools: this.getToolDefinitions() as OpenAI.Chat.Completions.ChatCompletionTool[]
-        });
+        };
+        if (includeTools) {
+            request.tools = this.getToolDefinitions() as OpenAI.Chat.Completions.ChatCompletionTool[];
+        }
+        const response = await this.client.chat.completions.create(request);
 
         console.log("=== END OF PROMPT ===\n");
-        return response.choices[0].message;
+        return response.choices[0].message || "";
     }
 }
 
@@ -433,9 +466,8 @@ async function interactiveLoop(): Promise<void> {
     console.log("- Exit: type /exit or /quit.");
     console.log("=".repeat(80));
 
-    const bot = new ChatBot(
-        "You are a helpful coding assistant with access to file system tools. You can read files, write files, see directory structures, execute bash commands, and search in files. Use these tools to help with coding tasks and file management."
-    );
+    // Use default system prompt with stricter tool usage guidance
+    const bot = new ChatBot();
 
     const rl = readline.createInterface({
         input: process.stdin,
