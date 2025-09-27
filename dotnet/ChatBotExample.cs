@@ -113,6 +113,10 @@ public static class ChatBotExample
         Console.WriteLine(new string('=', 80));
         Console.WriteLine("INTERACTIVE CHATBOT - Have a conversation!");
         Console.WriteLine("Type your questions and press Enter. Ctrl+C to exit.");
+        Console.WriteLine("Tips:");
+        Console.WriteLine("- Single-line: type and press Enter.");
+        Console.WriteLine("- Multi-line: type /ml and press Enter, then paste lines; finish with /end (or ---) on its own line.");
+        Console.WriteLine("- Exit: type /exit or /quit.");
         Console.WriteLine(new string('=', 80));
 
         var client = CreateClient();
@@ -123,14 +127,52 @@ public static class ChatBotExample
             while (true)
             {
                 Console.Write("\nYour question: ");
-                var input = Console.ReadLine();
-                if (input == null)
+                var first = Console.ReadLine();
+                if (first == null)
                 {
                     Console.WriteLine("\nGoodbye! Thanks for chatting!");
                     break;
                 }
-                input = input.Trim();
-                if (input.Length == 0)
+                first = first.Trim();
+
+                string userQuery;
+                if (string.Equals(first, "/ml", StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine("Enter multi-line input. Finish with /end or --- on a line by itself.");
+                    var lines = new List<string>();
+                    while (true)
+                    {
+                        var line = Console.ReadLine();
+                        if (line is null)
+                        {
+                            userQuery = string.Join("\n", lines).Trim();
+                            break;
+                        }
+                        var trimmed = line.Trim();
+                        if (trimmed.Equals("/end", StringComparison.OrdinalIgnoreCase) || trimmed == "---")
+                        {
+                            userQuery = string.Join("\n", lines).Trim();
+                            break;
+                        }
+                        else
+                        {
+                            lines.Add(line);
+                        }
+                    }
+                }
+                else
+                {
+                    userQuery = first;
+                }
+
+                // Allow quick exit commands
+                if (userQuery.Equals("/exit", StringComparison.OrdinalIgnoreCase) || userQuery.Equals("/quit", StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine("Exiting...");
+                    break;
+                }
+
+                if (string.IsNullOrWhiteSpace(userQuery))
                 {
                     Console.WriteLine("Please enter a question.");
                     continue;
@@ -139,7 +181,7 @@ public static class ChatBotExample
                 string answer;
                 try
                 {
-                    answer = await session.SendAsync(input);
+                    answer = await session.SendAsync(userQuery);
                 }
                 catch (Exception ex)
                 {
