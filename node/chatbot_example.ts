@@ -20,6 +20,7 @@ class ChatBot {
     constructor(system: string = "") {
         this.system = system;
         this.messages = [];
+        
         if (this.system) {
             this.messages.push({ role: "system", content: system });
         }
@@ -87,11 +88,18 @@ async function query(question: string, bot: ChatBot): Promise<string> {
 async function interactiveLoop(): Promise<void> {
     // Main interactive loop for user queries
     console.log("=".repeat(80));
-    console.log("INTERACTIVE CHATBOT - Have a conversation!");
+    console.log("INTERACTIVE CODING AGENT - Have a conversation!");
     console.log("Type your questions and press Enter. Use Ctrl+C to exit.");
+    console.log("I can help with file operations, code analysis, and general questions.");
+    console.log("Tips:");
+    console.log("- Single-line: type and press Enter.");
+    console.log("- Multi-line: type /ml and press Enter, then paste lines; finish with /end (or ---) on its own line.");
+    console.log("- Exit: type /exit or /quit.");
     console.log("=".repeat(80));
     
-    const bot = new ChatBot(); // Create one bot instance to maintain conversation history
+    const bot = new ChatBot(
+        "You are a helpful assistant."
+    );
 
     const rl = readline.createInterface({
         input: process.stdin,
@@ -100,8 +108,26 @@ async function interactiveLoop(): Promise<void> {
 
     const askQuestion = (): Promise<string> => {
         return new Promise((resolve) => {
-            rl.question("\nYour question: ", (answer) => {
-                resolve(answer.trim());
+            rl.question("\nYour question: ", async (answer) => {
+                const first = (answer ?? "").trim();
+                if (first.toLowerCase() === "/ml") {
+                    console.log("Enter multi-line input. Finish with /end or --- on a line by itself.");
+                    const lines: string[] = [];
+                    const askMore = (): void => {
+                        rl.question("", (line) => {
+                            const trimmed = (line ?? "").trim();
+                            if (trimmed === "/end" || trimmed === "---") {
+                                resolve(lines.join("\n").trim());
+                            } else {
+                                lines.push(line);
+                                askMore();
+                            }
+                        });
+                    };
+                    askMore();
+                } else {
+                    resolve(first);
+                }
             });
         });
     };
@@ -109,6 +135,11 @@ async function interactiveLoop(): Promise<void> {
     try {
         while (true) {
             const userQuery = await askQuestion();
+            // Allow quick exit commands
+            if (userQuery.toLowerCase() === "/exit" || userQuery.toLowerCase() === "/quit") {
+                console.log("Exiting...");
+                break;
+            }
             if (userQuery) { // Only process non-empty queries
                 const result = await query(userQuery, bot);
                 console.log(`Answer: ${result}`);
