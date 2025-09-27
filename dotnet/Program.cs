@@ -25,6 +25,11 @@ if (args.Length > 0)
         case "codingagentexample":
             await CodingAgentExample.RunAsync();
             break;
+        case "codingagentguardrails":
+        case "coding_agent_guardrails":
+        case "codingagentguardrailsexample":
+            await CodingAgentGuardrailsExample.RunAsync();
+            break;
         case "help":
         case "--help":
         case "-h":

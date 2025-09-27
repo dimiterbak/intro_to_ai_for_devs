@@ -1,6 +1,7 @@
 using OpenAI;
 using OpenAI.Chat;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace DotNetOpenAI;
 
@@ -85,7 +86,7 @@ public static class CodingAgentGuardrailsExample
 
             _readFileTool = ChatTool.CreateFunctionTool(
                 functionName: nameof(ReadFileFunc),
-                functionDescription: "Read and return the contents of a file at the given relative filepath",
+                functionDescription: "Read and return the contents of a file at the given relative filepath. Prefer this over running shell commands like 'cat'.",
                 functionParameters: BinaryData.FromString("""
                 {
                   "type": "object",
@@ -125,7 +126,7 @@ public static class CodingAgentGuardrailsExample
 
             _executeBashTool = ChatTool.CreateFunctionTool(
                 functionName: nameof(ExecuteBashCommandFunc),
-                functionDescription: "Execute a bash command in the shell and return its output, error, and exit code",
+                functionDescription: "Execute a bash command in the shell and return its output, error, and exit code. Only use when the user explicitly asks to run a shell/terminal command. Prefer read_file/search_in_files for reading content.",
                 functionParameters: BinaryData.FromString("""
                 {
                   "type": "object",
@@ -158,10 +159,53 @@ public static class CodingAgentGuardrailsExample
             return await ExecuteAsync();
         }
 
-        private ChatCompletionOptions BuildOptions() => new()
+        private ChatCompletionOptions BuildOptions(bool includeTools)
         {
-            Tools = { _readFileTool, _writeFileTool, _seeFileTreeTool, _executeBashTool, _searchInFilesTool }
-        };
+            var options = new ChatCompletionOptions();
+            if (includeTools)
+            {
+                options.Tools.Add(_readFileTool);
+                options.Tools.Add(_writeFileTool);
+                options.Tools.Add(_seeFileTreeTool);
+                options.Tools.Add(_executeBashTool);
+                options.Tools.Add(_searchInFilesTool);
+            }
+            return options;
+        }
+
+        // Heuristic: expose tools only if the last user message suggests file/shell intent.
+        // Examples that SHOULD enable tools: mentions of reading/writing/creating files, searching, grep,
+        // file tree, directories/paths, opening files, running shell/CLI commands, common package managers,
+        // programming file extensions, or path-like tokens.
+        private bool ShouldEnableToolsForNextTurn()
+        {
+            // Find the last user message
+            UserChatMessage? lastUser = null;
+            for (int i = _messages.Count - 1; i >= 0; i--)
+            {
+                if (_messages[i] is UserChatMessage um)
+                {
+                    lastUser = um;
+                    break;
+                }
+            }
+
+            // If there's no user message yet, allow tools (safe default)
+            if (lastUser is null)
+            {
+                return true;
+            }
+
+            var text = string.Join("\n", lastUser.Content.Select(c => c.Text ?? string.Empty)).ToLowerInvariant();
+            string[] toolIntents = new[]
+            {
+                "read file", "write file", "create file", "append to file", "search", "grep", "file tree",
+                "directory", "path", "open", "bash", "shell", "terminal", "run", "execute", "npm", "node",
+                "ts-node", "tsc", "yarn", "pnpm", "pip", "python", "pytest", "make", "gradle", "cargo",
+                "go run", "go build", ".ts", ".js", ".json", ".py", ".md", "/", "\\"
+            };
+            return toolIntents.Any(w => text.Contains(w));
+        }
 
         private async Task<string> ExecuteAsync()
         {
@@ -175,7 +219,9 @@ public static class CodingAgentGuardrailsExample
             }
 
             var chatClient = _client.GetChatClient(_deployment);
-            var options = BuildOptions();
+            var includeTools = ShouldEnableToolsForNextTurn();
+            var options = BuildOptions(includeTools);
+            Console.WriteLine($"[guardrails] Tools included this turn: {includeTools}");
             var completion = await chatClient.CompleteChatAsync(_messages, options);
             Console.WriteLine("=== END OF PROMPT ===\n");
 
@@ -227,6 +273,39 @@ public static class CodingAgentGuardrailsExample
                         }
                     case nameof(ExecuteBashCommandFunc):
                         {
+                            // Gate bash execution: require explicit user intent to run shell/terminal commands
+                            // Look at the last user message and check for indicative keywords
+                            string lastUserText = string.Empty;
+                            for (int i = _messages.Count - 1; i >= 0; i--)
+                            {
+                                if (_messages[i] is UserChatMessage um)
+                                {
+                                    lastUserText = string.Join("\n", um.Content.Select(c => c.Text)).ToLowerInvariant();
+                                    break;
+                                }
+                            }
+
+                            bool explicitRequest = false;
+                            if (!string.IsNullOrEmpty(lastUserText))
+                            {
+                                // Match common signals that the user explicitly wants to run a command
+                                // Equivalent to: (bash|shell|terminal|run|execute|npm|node|yarn|pnpm|pip|python|pytest|ts-node|tsc|make|gradle|cargo|go\s+run|go\s+build)
+                                explicitRequest =
+                                    Regex.IsMatch(lastUserText, @"\b(bash|shell|terminal|run|execute|npm|node|yarn|pnpm|pip|python|pytest|ts-node|tsc|make|gradle|cargo)\b")
+                                    || Regex.IsMatch(lastUserText, @"go\s+run|go\s+build");
+                            }
+
+                            if (!explicitRequest)
+                            {
+                                var blocked = JsonSerializer.Serialize(new
+                                {
+                                    stdout = "",
+                                    stderr = "Blocked: bash commands require explicit user request. Please proceed without execute_bash_command.",
+                                    returncode = 1
+                                }, new JsonSerializerOptions { WriteIndented = true });
+                                return await Task.FromResult(blocked);
+                            }
+
                             string command = root.GetProperty("command").GetString()!;
                             string? cwd = root.TryGetProperty("cwd", out var cwdEl) ? cwdEl.GetString() : null;
                             return await Task.FromResult(_tools.ExecuteBashCommand(command, cwd));
