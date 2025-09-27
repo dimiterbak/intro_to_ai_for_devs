@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 from openai import OpenAI
 import json
@@ -27,10 +28,15 @@ class ChatBot:
         if project_path is None:
             project_path = Path.cwd()  # Use current working directory as default
         self.agent_tools = CodingAgentTools(Path(project_path))
-        self.system = system
+        defaultSystem = (
+            "You are a helpful coding assistant with access to file system tools. "
+            "Only use tools for file operations, code analysis, project navigation, or when the user explicitly asks you to run a shell command. "
+            "Do NOT use tools for general knowledge questions; answer from your own knowledge unless the user specifically references files, paths, or commands."
+        )
+        self.system = system or defaultSystem
         self.messages = []
         if self.system:
-            self.messages.append({"role": "system", "content": system})
+            self.messages.append({"role": "system", "content": self.system})
 
     def get_tool_definitions(self):
         """Convert agent tools to OpenAI function calling format"""
@@ -39,7 +45,7 @@ class ChatBot:
                 "type": "function",
                 "function": {
                     "name": "read_file",
-                    "description": "Read and return the contents of a file at the given relative filepath",
+                    "description": "Read and return the contents of a file at the given relative filepath. Prefer this over running shell commands like 'cat'.",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -95,7 +101,7 @@ class ChatBot:
                 "type": "function",
                 "function": {
                     "name": "execute_bash_command",
-                    "description": "Execute a bash command in the shell and return its output, error, and exit code",
+                    "description": "Execute a bash command in the shell and return its output, error, and exit code. Only use when the user explicitly asks to run a shell/terminal command. Prefer read_file/search_in_files for reading content.",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -171,6 +177,24 @@ class ChatBot:
                 root_dir = arguments.get("root_dir", ".")
                 return self.agent_tools.see_file_tree(root_dir)
             elif tool_name == "execute_bash_command":
+                # Only allow if the user explicitly asked to run a shell/terminal command
+                last_user = None
+                for msg in reversed(self.messages):
+                    if msg.get("role") == "user":
+                        last_user = msg
+                        break
+
+                text = (last_user.get("content") if last_user else "") or ""
+                text = text.lower()
+                explicit = re.search(r"(bash|shell|terminal|run|execute|npm|node|yarn|pnpm|pip|python|pytest|ts-node|tsc|make|gradle|cargo|go\s+run|go\s+build)", text)
+                if not explicit:
+                    # Mirror TS version: block unless explicitly requested
+                    return {
+                        "stdout": "",
+                        "stderr": "Blocked: bash commands require explicit user request. Please proceed without execute_bash_command.",
+                        "returncode": 1
+                    }
+
                 command = arguments["command"]
                 cwd = arguments.get("cwd")
                 stdout, stderr, returncode = self.agent_tools.execute_bash_command(command, cwd)
@@ -295,6 +319,33 @@ class ChatBot:
         # Run the async client
         return asyncio.run(_run())
 
+    def should_enable_tools_for_next_turn(self) -> bool:
+        """Heuristic: expose tools only if the last user message suggests file/shell intent.
+
+        Examples that SHOULD enable tools: mentions of reading/writing/creating files, searching, grep,
+        file tree, directories/paths, opening files, running shell/CLI commands, common package managers,
+        programming file extensions, or path-like tokens.
+        """
+        # Find the last user message
+        last_user = None
+        for msg in reversed(self.messages):
+            if msg.get("role") == "user":
+                last_user = msg
+                break
+
+        # If there's no user message yet, allow tools (safe default)
+        if not last_user:
+            return True
+
+        text = (last_user.get("content") or "").lower()
+        tool_intents = [
+            "read file", "write file", "create file", "append to file", "search", "grep", "file tree",
+            "directory", "path", "open", "bash", "shell", "terminal", "run", "execute", "npm", "node",
+            "ts-node", "tsc", "yarn", "pnpm", "pip", "python", "pytest", "make", "gradle", "cargo", "go run", "go build", ".ts", ".js", ".json",
+            ".py", ".md", "/", "\\"
+        ]
+        return any(w in text for w in tool_intents)
+
     def __call__(self, message):
         self.messages.append({"role": "user", "content": message})
         response_message = self.execute()
@@ -318,12 +369,19 @@ class ChatBot:
         )
 
         try:
-            # Include tools in the API call
-            response = client.chat.completions.create(
-                model=DEPLOYMENT_NAME,
-                messages=self.messages,
-                tools=self.get_tool_definitions()
-            )
+            # Conditionally include tools in the API call
+            include_tools = self.should_enable_tools_for_next_turn()
+            if include_tools:
+                response = client.chat.completions.create(
+                    model=DEPLOYMENT_NAME,
+                    messages=self.messages,
+                    tools=self.get_tool_definitions()
+                )
+            else:
+                response = client.chat.completions.create(
+                    model=DEPLOYMENT_NAME,
+                    messages=self.messages
+                )
             print("=== END OF PROMPT ===\n")
             return response.choices[0].message
         except Exception as e:
@@ -427,7 +485,7 @@ def interactive_loop():
     print("- Multi-line: type /ml and press Enter, then paste lines; finish with /end (or ---) on its own line.")
     print("=" * 80)
 
-    bot = ChatBot(system="You are a helpful coding assistant with access to file system tools. You can read files, write files, see directory structures, execute bash commands, and search in files. Use these tools to help with coding tasks and file management.")  # Create one bot instance to maintain conversation history
+    bot = ChatBot() # Initialize bot with default system prompt
     
     i = 0  # Prompt counter
     try:
