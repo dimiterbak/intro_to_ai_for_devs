@@ -20,6 +20,11 @@ if (args.Length > 0)
         case "reactcountexample":
             await ReActCountExample.RunAsync();
             break;
+        case "codingagent":
+        case "coding_agent":
+        case "codingagentexample":
+            await CodingAgentExample.RunAsync();
+            break;
         case "help":
         case "--help":
         case "-h":
@@ -49,6 +54,7 @@ static void ShowHelp()
     Console.WriteLine("  reactexample - Run ReAct (alias)");
     Console.WriteLine("  reactcount   - Run ReAct with count_letters tool");
     Console.WriteLine("  reactcountexample - Run ReAct with count_letters (alias)");
+    Console.WriteLine("  codingagent  - Run tool-enabled coding agent example");
     Console.WriteLine("  help         - Show this help message");
     Console.WriteLine();
     Console.WriteLine("Examples:");
@@ -57,5 +63,6 @@ static void ShowHelp()
     Console.WriteLine("  dotnet run chatbot          # Run chatbot example");
     Console.WriteLine("  dotnet run react            # Run ReAct example");
     Console.WriteLine("  dotnet run reactcount       # Run ReAct with count_letters tool");
+    Console.WriteLine("  dotnet run codingagent      # Run coding agent tools example");
     Console.WriteLine("  dotnet run help             # Show this help");
 }
