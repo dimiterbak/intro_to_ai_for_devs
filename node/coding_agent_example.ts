@@ -162,7 +162,7 @@ class ChatBot {
     /**
      * Execute a tool function with the given arguments
      */
-    executeTool(toolName: string, args: Record<string, any>): string | CommandResult | string[] | SearchMatch[] {
+    async executeTool(toolName: string, args: Record<string, any>): Promise<string | CommandResult | string[] | SearchMatch[] | any> {
         try {
             switch (toolName) {
                 case "read_file":
@@ -172,20 +172,22 @@ class ChatBot {
                     this.agentTools.writeFile(args.filepath, args.content);
                     return `Successfully wrote to ${args.filepath}`;
                     
-                case "see_file_tree":
+                case "see_file_tree": {
                     const rootDir = args.root_dir || ".";
                     return this.agentTools.seeFileTree(rootDir);
+                }
                     
-                case "execute_bash_command":
+                case "execute_bash_command": {
                     const command = args.command;
                     const cwd = args.cwd;
                     return this.agentTools.executeBashCommand(command, cwd);
+                }
                     
-                case "search_in_files":
+                case "search_in_files": {
                     const pattern = args.pattern;
                     const searchRootDir = args.root_dir || ".";
                     return this.agentTools.searchInFiles(pattern, searchRootDir);
-                    
+                }
                 default:
                     return `Unknown tool: ${toolName}`;
             }
