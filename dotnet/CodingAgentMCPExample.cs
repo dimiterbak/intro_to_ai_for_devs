@@ -69,6 +69,7 @@ public static class CodingAgentMCPExample
         private readonly ChatTool _seeFileTreeTool;
         private readonly ChatTool _executeBashTool;
         private readonly ChatTool _searchInFilesTool;
+    private readonly ChatTool _sequentialThinkingTool;
 
         public ChatBot(OpenAIClient client, string deployment, string? system, string projectPath)
         {
@@ -151,6 +152,27 @@ public static class CodingAgentMCPExample
                   "required": ["pattern"]
                 }
                 """));
+
+                        _sequentialThinkingTool = ChatTool.CreateFunctionTool(
+                            functionName: "sequentialthinking",
+                                functionDescription: "Call the sequentialthinking MCP server via a Node.js bridge. Allows step-by-step reasoning orchestration.",
+                                functionParameters: BinaryData.FromString("""
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "thought": {"type": "string", "description": "Your current thinking step."},
+                                        "nextThoughtNeeded": {"type": "boolean", "description": "Whether another thought step is needed."},
+                                        "thoughtNumber": {"type": "integer", "description": "Current thought number (1-based)."},
+                                        "totalThoughts": {"type": "integer", "description": "Estimated total thoughts needed."},
+                                        "isRevision": {"type": "boolean", "description": "Whether this revises previous thinking."},
+                                        "revisesThought": {"type": "integer", "description": "Which thought is being reconsidered."},
+                                        "branchFromThought": {"type": "integer", "description": "Branching point thought number."},
+                                        "branchId": {"type": "string", "description": "Branch identifier."},
+                                        "needsMoreThoughts": {"type": "boolean", "description": "If reaching end but realizing more thoughts are needed."}
+                                    },
+                                    "required": ["thought", "nextThoughtNeeded", "thoughtNumber", "totalThoughts"]
+                                }
+                                """));
         }
 
         public async Task<string> AskAsync(string userContent)
@@ -169,6 +191,7 @@ public static class CodingAgentMCPExample
                 options.Tools.Add(_seeFileTreeTool);
                 options.Tools.Add(_executeBashTool);
                 options.Tools.Add(_searchInFilesTool);
+                options.Tools.Add(_sequentialThinkingTool);
             }
             return options;
         }
@@ -202,7 +225,9 @@ public static class CodingAgentMCPExample
                 "read file", "write file", "create file", "append to file", "search", "grep", "file tree",
                 "directory", "path", "open", "bash", "shell", "terminal", "run", "execute", "npm", "node",
                 "ts-node", "tsc", "yarn", "pnpm", "pip", "python", "pytest", "make", "gradle", "cargo",
-                "go run", "go build", ".ts", ".js", ".json", ".py", ".md", "/", "\\"
+                "go run", "go build", ".ts", ".js", ".json", ".py", ".md", "/", "\\",
+                // Explicit tool by name (normalize variants)
+                "sequentialthinking", "sequential-thinking", "sequential_thinking"
             };
             return toolIntents.Any(w => text.Contains(w));
         }
@@ -254,8 +279,9 @@ public static class CodingAgentMCPExample
         {
             try
             {
-                // toolCall.FunctionArguments is a stringified JSON per docs
-                using var argsJson = JsonDocument.Parse(toolCall.FunctionArguments);
+                // toolCall.FunctionArguments may be BinaryData; convert to string first
+                var funcArgsStr = toolCall.FunctionArguments?.ToString() ?? "{}";
+                using var argsJson = JsonDocument.Parse(funcArgsStr);
                 var root = argsJson.RootElement;
                 switch (toolCall.FunctionName)
                 {
@@ -316,6 +342,63 @@ public static class CodingAgentMCPExample
                             string rootDir = root.TryGetProperty("root_dir", out var rd) ? rd.GetString() ?? "." : ".";
                             return _tools.SearchInFiles(pattern, rootDir);
                         }
+                    case nameof(SequentialThinkingFunc):
+                    case "sequentialthinking":
+                        {
+                            // Call Node bridge script using "node"; pass arguments as base64-encoded JSON via env.
+                            // Prefer project-level node folder; script path is node/tools/mcp_seqthink_bridge.mjs relative to repo root.
+                            var repoRoot = Directory.GetParent(Environment.CurrentDirectory)?.FullName ?? Environment.CurrentDirectory;
+                            var bridgePath = Path.Combine(repoRoot, "node", "tools", "mcp_seqthink_bridge.mjs");
+                            if (!File.Exists(bridgePath))
+                            {
+                                return $"Error: Bridge script not found at {bridgePath}.";
+                            }
+
+                            var argsDict = JsonSerializer.Deserialize<Dictionary<string, object>>(funcArgsStr) ?? new();
+                            // Encode original args (not parsed root to preserve types) for the bridge
+                            string argsB64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(funcArgsStr));
+
+                            var psi = new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = "/bin/bash",
+                                ArgumentList = { "-lc", $"node {EscapeBashArg(bridgePath)}" },
+                                WorkingDirectory = repoRoot,
+                                RedirectStandardOutput = true,
+                                RedirectStandardError = true,
+                                UseShellExecute = false,
+                                CreateNoWindow = true
+                            };
+                            // Pass env flag to optionally disable thought logging (parity with Python)
+                            psi.Environment["DISABLE_THOUGHT_LOGGING"] = Environment.GetEnvironmentVariable("DISABLE_THOUGHT_LOGGING") ?? "false";
+                            psi.Environment["MCP_SEQ_ARGS_B64"] = argsB64;
+
+                            try
+                            {
+                                using var proc = System.Diagnostics.Process.Start(psi)!;
+                                string stdout = await proc.StandardOutput.ReadToEndAsync();
+                                string stderr = await proc.StandardError.ReadToEndAsync();
+                                bool exited = proc.WaitForExit(20_000);
+                                if (!exited)
+                                {
+                                    try { proc.Kill(entireProcessTree: true); } catch { }
+                                    return JsonSerializer.Serialize(new { ok = false, error = "Timeout after 20s from Node bridge." }, new JsonSerializerOptions { WriteIndented = true });
+                                }
+
+                                if (string.IsNullOrWhiteSpace(stdout))
+                                {
+                                    // Return stderr in a JSON envelope if stdout is empty
+                                    return JsonSerializer.Serialize(new { ok = false, error = string.IsNullOrWhiteSpace(stderr) ? "No output from Node bridge" : stderr.Trim() }, new JsonSerializerOptions { WriteIndented = true });
+                                }
+
+                                // The bridge prints JSON to stdout
+                                return stdout.Trim();
+                            }
+                            catch (Exception ex)
+                            {
+                                // Helpful guidance for missing Node / npx
+                                return JsonSerializer.Serialize(new { ok = false, error = $"Failed to run Node bridge: {ex.Message}. Ensure Node.js is installed (e.g., brew install node)." }, new JsonSerializerOptions { WriteIndented = true });
+                            }
+                        }
                     default:
                         return $"Unknown tool: {toolCall.FunctionName}";
                 }
@@ -326,12 +409,20 @@ public static class CodingAgentMCPExample
             }
         }
 
+        private static string EscapeBashArg(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return "''";
+            // Simple safe single-quote escaping for bash
+            return "'" + path.Replace("'", "'\\''") + "'";
+        }
+
         // Dummy method names used for tool wiring; not called directly
         private static void ReadFileFunc() { }
         private static void WriteFileFunc() { }
         private static void SeeFileTreeFunc() { }
         private static void ExecuteBashCommandFunc() { }
         private static void SearchInFilesFunc() { }
+        private static void SequentialThinkingFunc() { }
     }
 
     private static async Task InteractiveLoopAsync()
