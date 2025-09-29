@@ -12,10 +12,23 @@ public class TestOpenAI
         string? deploymentName = Environment.GetEnvironmentVariable("DEPLOYMENT_NAME");
         string? apiKey = Environment.GetEnvironmentVariable("AI_API_KEY");
 
-        if (string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(deploymentName) || string.IsNullOrEmpty(apiKey))
+        // Validate required environment variables
+        if (string.IsNullOrEmpty(apiKey))
         {
-            Console.WriteLine("Error: Please set the AI_ENDPOINT, DEPLOYMENT_NAME, and AI_API_KEY environment variables.");
-            return;
+            Console.Error.WriteLine("Error: AI_API_KEY environment variable is not set");
+            Environment.Exit(1);
+        }
+
+        if (string.IsNullOrEmpty(endpoint))
+        {
+            Console.Error.WriteLine("Error: AI_ENDPOINT environment variable is not set");
+            Environment.Exit(1);
+        }
+
+        if (string.IsNullOrEmpty(deploymentName))
+        {
+            Console.Error.WriteLine("Error: DEPLOYMENT_NAME environment variable is not set");
+            Environment.Exit(1);
         }
 
         var client = new OpenAIClient(new System.ClientModel.ApiKeyCredential(apiKey), new OpenAIClientOptions
