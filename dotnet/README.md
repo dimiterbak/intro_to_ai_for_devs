@@ -1,4 +1,4 @@
-# Setup 
+# .Net Version of Workshop
 
 ## Prerequisites
 
@@ -88,9 +88,16 @@ PS> dotnet run help
 Usage: dotnet run <app-name>
 
 Available apps:
-  test       - Run OpenAI test
-  testopenai - Run OpenAI test (alias)
-  help       - Show this help message
+  test         - Run OpenAI test
+  testopenai   - Run OpenAI test (alias)
+  chatbot      - Run interactive chatbot example
+  react        - Run ReAct (Reason + Act) example
+  reactexample - Run ReAct (alias)
+  reactcount   - Run ReAct with count_letters tool
+  reactcountexample - Run ReAct with count_letters (alias)
+  codingagent  - Run tool-enabled coding agent example
+  help         - Show this help message
+
 
 Examples:
   dotnet run           # Run default app (test)
