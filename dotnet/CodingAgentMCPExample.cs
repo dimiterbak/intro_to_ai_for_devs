@@ -373,8 +373,8 @@ public static class CodingAgentMCPExample
 
                             var psi = new System.Diagnostics.ProcessStartInfo
                             {
-                                FileName = "/bin/bash",
-                                ArgumentList = { "-lc", $"node {EscapeBashArg(bridgePath)}" },
+                                FileName = "node",
+                                ArgumentList = { bridgePath },
                                 WorkingDirectory = repoRoot,
                                 RedirectStandardOutput = true,
                                 RedirectStandardError = true,
