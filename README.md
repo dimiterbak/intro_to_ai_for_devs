@@ -1,14 +1,24 @@
-# Introduction to AI for Devs Workshop
+# Introduction to AI for Devs
 
-In this workshop we will:
+Welcome! This repo contains hands-on examples for three ecosystems. Pick your preferred language to get started:
 
+## Choose your language guide
 
-## Prerequisites
+- Node.js — see `node/README.md`
+	- ./node/README.md
+- Python — see `python/README.md`
+	- ./python/README.md
+- .NET — see `dotnet/README.md`
+	- ./dotnet/README.md
 
-- Python
-- Node
-- OpenAI key
+Each guide covers prerequisites, environment setup, how to set your AI credentials, and how to run the sample apps (chatbot, ReAct, coding agent, and MCP demos where applicable).
 
-## Introduction
+## Repository layout
+
+- `node/` — TypeScript examples and scripts
+- `python/` — Python examples and utilities
+- `dotnet/` — .NET 9 console apps and examples
+
+If you’re unsure which to use, start with the language you’re most comfortable in, then explore the others.
 
 
