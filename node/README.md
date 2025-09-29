@@ -1,4 +1,4 @@
-# Node Version of Workshop
+# Introduction to AI for Node Devs
 
 ## Prerequisites
 

@@ -1,4 +1,4 @@
-# .Net Version of Workshop
+# Introduction to AI for .Net Devs
 
 ## Prerequisites
 
