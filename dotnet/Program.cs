@@ -65,6 +65,7 @@ static void ShowHelp()
     Console.WriteLine("  reactcount   - Run ReAct with count_letters tool");
     Console.WriteLine("  reactcountexample - Run ReAct with count_letters (alias)");
     Console.WriteLine("  codingagent  - Run tool-enabled coding agent example");
+    Console.WriteLine("  codingagentmcp - Run tool-enabled coding agent with MCP (sequentialthinking)");
     Console.WriteLine("  help         - Show this help message");
     Console.WriteLine();
     Console.WriteLine("Examples:");
@@ -74,5 +75,6 @@ static void ShowHelp()
     Console.WriteLine("  dotnet run react            # Run ReAct example");
     Console.WriteLine("  dotnet run reactcount       # Run ReAct with count_letters tool");
     Console.WriteLine("  dotnet run codingagent      # Run coding agent tools example");
+    Console.WriteLine("  dotnet run codingagentmcp   # Run coding agent with MCP sequentialthinking tool");
     Console.WriteLine("  dotnet run help             # Show this help");
 }

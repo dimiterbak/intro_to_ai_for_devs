@@ -96,6 +96,7 @@ Available apps:
   reactcount   - Run ReAct with count_letters tool
   reactcountexample - Run ReAct with count_letters (alias)
   codingagent  - Run tool-enabled coding agent example
+  codingagentmcp - Run tool-enabled coding agent with MCP (sequentialthinking)
   help         - Show this help message
 
 
@@ -108,6 +109,45 @@ Examples:
 PS> dotnet run test
 The capital of France is Paris.
 ```
+
+## MCP Node bridge setup (sequentialthinking tool)
+
+This project includes a Node-based MCP bridge that lets the .NET coding agent call the "sequentialthinking" tool via the Model Context Protocol (MCP).
+
+Prerequisites:
+- Node.js 18+ (20+ recommended). Install from https://nodejs.org or with Homebrew on macOS.
+
+One-time setup:
+```
+# From the repo root
+cd node
+npm install
+```
+
+Run the MCP-enabled coding agent:
+```
+cd ../dotnet
+dotnet run codingagentmcp
+```
+
+Tips for using the tool in the interactive agent:
+- Mention the tool by name to enable it, e.g. "Plan using the tool named sequentialthinking …".
+- The model may issue multiple sequentialthinking tool calls in a single turn if you ask it to.
+
+Optional: reduce server-side logging noise from the MCP server
+- macOS/Linux (bash):
+```
+export DISABLE_THOUGHT_LOGGING=1
+```
+- Windows PowerShell:
+```
+$env:DISABLE_THOUGHT_LOGGING = "1"
+```
+
+Troubleshooting:
+- "node: command not found" → Install Node.js and ensure it’s on PATH (`node -v`).
+- First run is slow and prints an "npx: installed …" message → expected; `npx` downloads the MCP server package on first use.
+- Errors about npm packages → make sure you ran `npm install` inside the `node/` folder.
 
 ### Adding New Applications:
 
