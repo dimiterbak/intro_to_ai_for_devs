@@ -107,7 +107,7 @@ public static class ChatBotExample
             var usage = response.Value.Usage;
             if (usage is not null)
             {
-                Console.WriteLine("Token usage:");
+                // Console.WriteLine("Token usage:");
                 var props = usage.GetType().GetProperties();
                 foreach (var p in props)
                 {
@@ -135,7 +135,7 @@ public static class ChatBotExample
         Console.WriteLine(new string('=', 80));
 
         var client = CreateClient();
-        var session = new ChatSession(client, DeploymentName!);
+        var session = new ChatSession(client, DeploymentName!, "You are a helpful assistant.");
 
         try
         {
