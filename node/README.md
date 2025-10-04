@@ -38,13 +38,7 @@ npm install -D @modelcontextprotocol/server-sequential-thinking
 ## 3. Export your environment variables
 
 ### Windows PowerShell:
-```
-$env:AI_API_KEY = "your_api_key_here"
-$env:AI_ENDPOINT = "your_endpoint_key_here"
-$env:DEPLOYMENT_NAME = "your_model_name-here"
-```
-
-Or for persistent environment variables (requires restart of terminal):
+For persistent environment variables (requires restart of terminal):
 ```
 setx AI_API_KEY "your_api_key_here"
 setx AI_ENDPOINT "your_endpoint_key_here"
