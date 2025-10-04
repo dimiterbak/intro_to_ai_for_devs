@@ -30,7 +30,8 @@
     "@modelcontextprotocol/sdk": "^1.0.0",
     "axios": "^1.0.0",
     "openai": "^4.0.0",
-    "readline-sync": "^1.4.10"
+    "readline-sync": "^1.4.10",
+    "tsc": "^2.0.4"
   },
   "devDependencies": {
     "@modelcontextprotocol/server-sequential-thinking": "^2025.7.1",
