@@ -6,9 +6,9 @@ using System.Text.RegularExpressions;
 namespace DotNetOpenAI;
 
 /// <summary>
-/// C# port of python/react_example.py demonstrating the ReAct (Reason + Act) pattern.
-/// Maintains a conversation where the model can request actions (wikipedia, calculate)
-/// and receives observations in subsequent turns until it outputs an Answer.
+/// This file demonstrates the setup and use of the ReAct prompting framework with OpenAI's API, following the implementation details from 
+/// [Simon Willison's learning log](https://til.simonwillison.net/llms/python-react-pattern).
+/// The ReAct pattern combines reasoning and acting, allowing the model to iteratively think about a problem, take actions (like looking up information), and refine its answers based on observations.
 /// </summary>
 public static class ReActExample
 {
