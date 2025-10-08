@@ -406,6 +406,7 @@ async function interactiveLoop(): Promise<void> {
             }
         }
     } catch (error) {
+        console.error("An error occurred:", error);
         console.log("\n\nGoodbye! Thanks for chatting!");
     } finally {
         rl.close();
