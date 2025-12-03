@@ -230,7 +230,7 @@ Answer: The capital of France is Paris";
     {
         // Very simple and unsafe expression evaluator placeholder.
         // For safety, only allow digits, operators, parentheses, decimal points, and whitespace.
-    if (!Regex.IsMatch(expression, "^[0-9+\\-*/(). %]+$"))
+        if (!Regex.IsMatch(expression, "^[0-9+\\-*/(). %]+$"))
         {
             return Task.FromResult("Unsupported characters in calculation.");
         }
