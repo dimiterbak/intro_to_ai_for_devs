@@ -69,7 +69,7 @@ public static class CodingAgentMCPExample
         private readonly ChatTool _seeFileTreeTool;
         private readonly ChatTool _executeBashTool;
         private readonly ChatTool _searchInFilesTool;
-    private readonly ChatTool _sequentialThinkingTool;
+        private readonly ChatTool _sequentialThinkingTool;
 
         public ChatBot(OpenAIClient client, string deployment, string? system, string projectPath)
         {
@@ -153,26 +153,26 @@ public static class CodingAgentMCPExample
                 }
                 """));
 
-                        _sequentialThinkingTool = ChatTool.CreateFunctionTool(
-                            functionName: "sequentialthinking",
-                                functionDescription: "Call the sequentialthinking MCP server via a Node.js bridge. Allows step-by-step reasoning orchestration.",
-                                functionParameters: BinaryData.FromString("""
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "thought": {"type": "string", "description": "Your current thinking step."},
-                                        "nextThoughtNeeded": {"type": "boolean", "description": "Whether another thought step is needed."},
-                                        "thoughtNumber": {"type": "integer", "description": "Current thought number (1-based)."},
-                                        "totalThoughts": {"type": "integer", "description": "Estimated total thoughts needed."},
-                                        "isRevision": {"type": "boolean", "description": "Whether this revises previous thinking."},
-                                        "revisesThought": {"type": "integer", "description": "Which thought is being reconsidered."},
-                                        "branchFromThought": {"type": "integer", "description": "Branching point thought number."},
-                                        "branchId": {"type": "string", "description": "Branch identifier."},
-                                        "needsMoreThoughts": {"type": "boolean", "description": "If reaching end but realizing more thoughts are needed."}
-                                    },
-                                    "required": ["thought", "nextThoughtNeeded", "thoughtNumber", "totalThoughts"]
-                                }
-                                """));
+            _sequentialThinkingTool = ChatTool.CreateFunctionTool(
+                functionName: "sequentialthinking",
+                    functionDescription: "Call the sequentialthinking MCP server via a Node.js bridge. Allows step-by-step reasoning orchestration.",
+                    functionParameters: BinaryData.FromString("""
+                    {
+                        "type": "object",
+                        "properties": {
+                            "thought": {"type": "string", "description": "Your current thinking step."},
+                            "nextThoughtNeeded": {"type": "boolean", "description": "Whether another thought step is needed."},
+                            "thoughtNumber": {"type": "integer", "description": "Current thought number (1-based)."},
+                            "totalThoughts": {"type": "integer", "description": "Estimated total thoughts needed."},
+                            "isRevision": {"type": "boolean", "description": "Whether this revises previous thinking."},
+                            "revisesThought": {"type": "integer", "description": "Which thought is being reconsidered."},
+                            "branchFromThought": {"type": "integer", "description": "Branching point thought number."},
+                            "branchId": {"type": "string", "description": "Branch identifier."},
+                            "needsMoreThoughts": {"type": "boolean", "description": "If reaching end but realizing more thoughts are needed."}
+                        },
+                        "required": ["thought", "nextThoughtNeeded", "thoughtNumber", "totalThoughts"]
+                }
+                """));
         }
 
         public async Task<string> AskAsync(string userContent)
