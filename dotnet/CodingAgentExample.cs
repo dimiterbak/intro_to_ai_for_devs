@@ -163,53 +163,53 @@ public static class CodingAgentExample
             var chatClient = _client.GetChatClient(_deployment);
 
             while (true)
-        {
-            _promptCount++;
-            Console.WriteLine($"\n-- Prompt {_promptCount} --");
-            Console.WriteLine("\n=== FULL PROMPT SENT TO MODEL ===");
-            foreach (var msg in _messages)
             {
-                    // Be defensive when printing content (some message types may not carry plain text parts)
-                    string printed;
-                    try
-                    {
-                        printed = string.Join("\n", msg.Content.Select(c => c.Text).Where(t => !string.IsNullOrEmpty(t)));
-                    }
-                    catch
-                    {
-                        printed = msg.ToString() ?? string.Empty;
-                    }
-                    Console.WriteLine($"  {printed}\n");
-            }
-
-            var options = BuildOptions();
-            var completion = await chatClient.CompleteChatAsync(_messages, options);
-            Console.WriteLine("=== END OF PROMPT ===\n");
-
-            // Handle tool calls loop if needed
-            var result = completion.Value;
-
-            if (result.FinishReason == ChatFinishReason.ToolCalls)
-            {
-                // Add assistant message with tool calls to history
-                _messages.Add(new AssistantChatMessage(result));
-
-                // Execute all tool calls returned in this assistant message
-                foreach (var toolCall in result.ToolCalls)
+                _promptCount++;
+                Console.WriteLine($"\n-- Prompt {_promptCount} --");
+                Console.WriteLine("\n=== FULL PROMPT SENT TO MODEL ===");
+                foreach (var msg in _messages)
                 {
-                    Console.WriteLine($"🔧 Executing tool: {toolCall.FunctionName} with args: {toolCall.FunctionArguments}");
-                    var toolResult = await ExecuteToolAsync(toolCall);
-                    _messages.Add(new ToolChatMessage(toolCall.Id, toolResult));
+                        // Be defensive when printing content (some message types may not carry plain text parts)
+                        string printed;
+                        try
+                        {
+                            printed = string.Join("\n", msg.Content.Select(c => c.Text).Where(t => !string.IsNullOrEmpty(t)));
+                        }
+                        catch
+                        {
+                            printed = msg.ToString() ?? string.Empty;
+                        }
+                        Console.WriteLine($"  {printed}\n");
                 }
 
-                    // Loop continues: next iteration will print a new Prompt heade
-                    continue;
-            }
-            else
-            {
-                var text = result.Content.Count > 0 ? result.Content[0].Text : string.Empty;
-                _messages.Add(new AssistantChatMessage(result));
-                return text;
+                var options = BuildOptions();
+                var completion = await chatClient.CompleteChatAsync(_messages, options);
+                Console.WriteLine("=== END OF PROMPT ===\n");
+
+                // Handle tool calls loop if needed
+                var result = completion.Value;
+
+                if (result.FinishReason == ChatFinishReason.ToolCalls)
+                {
+                    // Add assistant message with tool calls to history
+                    _messages.Add(new AssistantChatMessage(result));
+
+                    // Execute all tool calls returned in this assistant message
+                    foreach (var toolCall in result.ToolCalls)
+                    {
+                        Console.WriteLine($"🔧 Executing tool: {toolCall.FunctionName} with args: {toolCall.FunctionArguments}");
+                        var toolResult = await ExecuteToolAsync(toolCall);
+                        _messages.Add(new ToolChatMessage(toolCall.Id, toolResult));
+                    }
+
+                        // Loop continues: next iteration will print a new Prompt heade
+                        continue;
+                }
+                else
+                {
+                    var text = result.Content.Count > 0 ? result.Content[0].Text : string.Empty;
+                    _messages.Add(new AssistantChatMessage(result));
+                    return text;
                 }
             }
         }
