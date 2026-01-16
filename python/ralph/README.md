@@ -1,6 +1,6 @@
 # Ralph - Autonomous AI Agent
 
-> **Note**: This implementation is based on the [Ralph repository](https://github.com/snarktank/ralph) by [Ryan Carson](https://x.com/ryancarson). The original Ralph is an autonomous AI agent loop that runs Amp repeatedly until all PRD items are complete. This Python implementation adapts the Ralph pattern for use with OpenAI-compatible APIs and the coding agent framework.
+> **Note**: This implementation is based on the [Ralph repository](https://github.com/snarktank/ralph) by [Ryan Carson](https://x.com/ryancarson/status/2008548371712135632). The original Ralph is an autonomous AI agent loop that runs Amp repeatedly until all PRD items are complete. This Python implementation adapts the Ralph pattern for use with OpenAI-compatible APIs and the coding agent framework.
 
 Ralph is an autonomous AI agent loop that runs the coding agent repeatedly until all PRD items are complete. Each iteration is a fresh instance with clean context.
 

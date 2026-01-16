@@ -1,0 +1,229 @@
+{
+  "project": "TicTacToe",
+  "branchName": "ralph/tic-tac-toe-terminal",
+  "description": "Tic-Tac-Toe Terminal Game - Single-player terminal game with unbeatable computer opponent for children aged 10-15",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Display empty board with numeric mapping",
+      "acceptanceCriteria": [
+        "Display 3x3 grid in terminal",
+        "Show numeric mapping: 1-9 (1=top-left, 2=top-middle, 3=top-right, 4=middle-left, 5=center, 6=middle-right, 7=bottom-left, 8=bottom-middle, 9=bottom-right)",
+        "All cells initially empty",
+        "Board is large and clear with visible cell labels",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Implemented: tic_tac_toe.js renders empty board with numeric mapping"
+    },
+    {
+      "id": "US-002",
+      "title": "Display welcome message and initialize session score",
+      "acceptanceCriteria": [
+        "Show welcome message on game launch",
+        "Display brief instructions about board mapping and how to enter moves",
+        "Initialize session score: Player Wins: 0, Computer Wins: 0, Draws: 0",
+        "Display current session score",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Implemented: tic_tac_toe.js provides showWelcome(), instructions, and session score display"
+    },
+    {
+      "id": "US-003",
+      "title": "Accept player move input (1-9)",
+      "acceptanceCriteria": [
+        "Prompt player for move input",
+        "Accept integer input between 1 and 9",
+        "Read input from terminal",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Implemented: tic_tac_toe.js provides promptForMove() which prompts and validates integer input 1-9 from terminal"
+    },
+    {
+      "id": "US-004",
+      "title": "Validate player move input",
+      "acceptanceCriteria": [
+        "Reject non-numeric input with friendly error message",
+        "Reject numbers outside 1-9 range with friendly error message",
+        "Reject moves to occupied cells with friendly error message",
+        "Re-prompt after invalid input without crashing",
+        "Handle empty input and whitespace gracefully",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Apply player move and update board",
+      "acceptanceCriteria": [
+        "Place 'X' in selected cell (1-9) when move is valid",
+        "Update board display immediately after move",
+        "Show updated board with all previous moves visible",
+        "Player always uses 'X'",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Implement win detection (rows, columns, diagonals)",
+      "acceptanceCriteria": [
+        "Detect player win in any row (3 X's in a row)",
+        "Detect player win in any column (3 X's in a column)",
+        "Detect player win in any diagonal (3 X's in a diagonal)",
+        "Detect computer win in any row, column, or diagonal (3 O's)",
+        "Detect win immediately after winning move",
+        "Do not detect win when three marks are not aligned",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Implement draw detection",
+      "acceptanceCriteria": [
+        "Detect draw when board is full (9 moves) and no win condition met",
+        "Do not detect draw if there is a win",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Implement optimal computer move logic",
+      "acceptanceCriteria": [
+        "Computer takes winning move when available (places O to win)",
+        "Computer blocks player win when player has two X's in a row/column/diagonal",
+        "Computer plays optimally (never loses - always wins or draws)",
+        "Computer responds instantly with no noticeable delay",
+        "Computer always uses 'O'",
+        "Typecheck passes",
+        "Tests pass (verify computer never loses in multiple game rounds)"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Display win and draw messages",
+      "acceptanceCriteria": [
+        "Display child-friendly win message when player wins",
+        "Display child-friendly message when computer wins",
+        "Display child-friendly draw message when game ends in draw",
+        "Messages are encouraging and appropriate for ages 10-15",
+        "Messages are clear and concise",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Track and update session score",
+      "acceptanceCriteria": [
+        "Increment Player Wins by 1 when player wins",
+        "Increment Computer Wins by 1 when computer wins",
+        "Increment Draws by 1 when game ends in draw",
+        "Score persists across multiple rounds in same session",
+        "Score resets to 0 when application exits (not persisted)",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Display session score between rounds",
+      "acceptanceCriteria": [
+        "Show current session score after each game ends",
+        "Display score in format: 'Player Wins: X, Computer Wins: Y, Draws: Z'",
+        "Score is clearly visible",
+        "Typecheck passes"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Implement replay functionality",
+      "acceptanceCriteria": [
+        "Prompt player to play again after game ends: 'Play again? (y/n)'",
+        "Accept 'y' or 'yes' to start new game",
+        "Accept 'n' or 'no' to exit game",
+        "Reset board to empty state when replaying",
+        "Preserve session score when replaying",
+        "Handle invalid replay input with friendly error message and re-prompt",
+        "New game starts with player's turn",
+        "Typecheck passes"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Implement quit functionality",
+      "acceptanceCriteria": [
+        "Accept 'q' or 'quit' command during move prompt to exit",
+        "Accept 'q' or 'quit' command at replay prompt to exit",
+        "Handle quit command case insensitively (Q, QUIT, Quit, etc.)",
+        "Display farewell message on quit",
+        "Application exits gracefully",
+        "Typecheck passes"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Implement game flow and turn sequence",
+      "acceptanceCriteria": [
+        "Player always moves first in new game",
+        "Turns alternate: player, then computer, then player, etc.",
+        "Game continues until win or draw detected",
+        "Board state preserved during turn transitions",
+        "No moves lost during transitions",
+        "Typecheck passes"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Polish user experience and messaging",
+      "acceptanceCriteria": [
+        "All messages use clear, age-appropriate language (10-15 years)",
+        "Messages avoid technical jargon",
+        "Messages are concise with short lines",
+        "Board formatting adapts to terminal size constraints",
+        "Optional brief hint may be shown after game end (explaining decisive move)",
+        "Typecheck passes"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
