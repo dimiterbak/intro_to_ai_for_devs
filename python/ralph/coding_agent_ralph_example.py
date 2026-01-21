@@ -515,7 +515,7 @@ if __name__ == '__main__':
         if len(sys.argv) > 1:
             # Join all arguments as the question (allows multi-word questions without quotes)
             question = " ".join(sys.argv[1:])
-            bot = ChatBot()
+            bot = ChatBot(project_path=Path(__file__).parent)
             result = agent_loop(question, bot)
             print(result)
         # Check if stdin has input (for piping, e.g., from ralph.sh)
@@ -523,7 +523,7 @@ if __name__ == '__main__':
             # Read from stdin
             question = sys.stdin.read().strip()
             if question:
-                bot = ChatBot()
+                bot = ChatBot(project_path=Path(__file__).parent)
                 result = agent_loop(question, bot)
                 print(result)
             else:
