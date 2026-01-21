@@ -405,7 +405,7 @@ def agent_loop(question, bot):
     response_message = bot(question)
 
     # Keep handling tool calls until the model returns a final answer
-    max_tool_cycles = 8
+    max_tool_cycles = 20
     cycles = 0
     tool_results_accum: list[str] = []
 
