@@ -7,6 +7,7 @@
 // occupied cells, empty input; re-prompt)
 // Implementation for US-005: Apply player move and update board (applyPlayerMove)
 // Implementation for US-006: Win detection (checkWinner) and isBoardFull
+// Implementation for US-007: Draw detection (isDraw)
 
 const readline = require('readline');
 
@@ -191,6 +192,16 @@ function isBoardFull(board) {
   return board.every((cell) => cell === 'X' || cell === 'O');
 }
 
+// US-007: Draw detection
+// A draw is when the board is full and there is no winner
+function isDraw(board) {
+  if (!Array.isArray(board) || board.length !== 9) {
+    throw new Error('isDraw requires a board array of length 9');
+  }
+  const winnerRes = checkWinner(board);
+  return winnerRes.winner === null && isBoardFull(board);
+}
+
 // If run directly, display the welcome, the mapping board, prompt for a single validated move, then exit
 if (require.main === module) {
   (async () => {
@@ -212,11 +223,14 @@ if (require.main === module) {
       console.log('Updated board:');
       renderBoard(board, { showMapping: false });
 
-      // Demonstrate win detection (for manual verification)
+      // Demonstrate win/draw detection (for manual verification)
       const result = checkWinner(board);
       if (result.winner) {
         console.log(`Winner detected: ${result.winner} on line ${result.winningLine}`);
+      } else if (isDraw(board)) {
+        console.log('Game ended in a draw (board full, no winner).');
       } else if (isBoardFull(board)) {
+        // fallback (should be equivalent to isDraw)
         console.log('Board is full: draw');
       } else {
         console.log('No winner yet.');
@@ -230,4 +244,4 @@ if (require.main === module) {
   })();
 }
 
-module.exports = { createEmptyBoard, renderBoard, showWelcome, showScore, promptInput, promptForMove, promptForMoveValidated, applyMove, applyPlayerMove, checkWinner, isBoardFull };
+module.exports = { createEmptyBoard, renderBoard, showWelcome, showScore, promptInput, promptForMove, promptForMoveValidated, applyMove, applyPlayerMove, checkWinner, isBoardFull, isDraw };
