@@ -100,8 +100,8 @@
         "Tests pass"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented: isDraw(board) in tic_tac_toe.js. Tests in test_draw_detection.js pass."
     },
     {
       "id": "US-008",

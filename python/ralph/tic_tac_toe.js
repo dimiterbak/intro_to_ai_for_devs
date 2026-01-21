@@ -8,6 +8,7 @@
 // Implementation for US-005: Apply player move and update board (applyPlayerMove)
 // Implementation for US-006: Win detection (checkWinner) and isBoardFull
 // Implementation for US-007: Draw detection (isDraw)
+// Implementation for US-008: Optimal computer move logic (computeBestMove, minimax)
 
 const readline = require('readline');
 
@@ -202,6 +203,82 @@ function isDraw(board) {
   return winnerRes.winner === null && isBoardFull(board);
 }
 
+// US-008: Implement optimal computer move logic (Minimax)
+// computeBestMove(board) -> number (0..8)
+// minimax(board, isAiTurn) -> { score, move }
+function computeBestMove(board) {
+  if (!Array.isArray(board) || board.length !== 9) {
+    throw new Error('computeBestMove requires a board array of length 9');
+  }
+
+  const availableMoves = [];
+  for (let i = 0; i < 9; i++) {
+    if (board[i] !== 'X' && board[i] !== 'O') availableMoves.push(i);
+  }
+
+  if (availableMoves.length === 0) return -1;
+
+  let bestScore = -Infinity;
+  let bestMove = availableMoves[0];
+
+  for (const move of availableMoves) {
+    // make move
+    board[move] = 'O';
+    const { score } = minimax(board, false);
+    // undo
+    board[move] = null;
+
+    if (score > bestScore || (score === bestScore && move < bestMove)) {
+      bestScore = score;
+      bestMove = move;
+    }
+  }
+
+  return bestMove;
+}
+
+function minimax(board, isAiTurn) {
+  const winnerRes = checkWinner(board);
+  if (winnerRes.winner === 'O') return { score: 1, move: null };
+  if (winnerRes.winner === 'X') return { score: -1, move: null };
+  if (isBoardFull(board)) return { score: 0, move: null };
+
+  const availableMoves = [];
+  for (let i = 0; i < 9; i++) {
+    if (board[i] !== 'X' && board[i] !== 'O') availableMoves.push(i);
+  }
+
+  if (isAiTurn) {
+    // AI (O) tries to maximize score
+    let bestScore = -Infinity;
+    let bestMove = availableMoves[0] ?? null;
+    for (const move of availableMoves) {
+      board[move] = 'O';
+      const { score } = minimax(board, false);
+      board[move] = null;
+      if (score > bestScore || (score === bestScore && (bestMove === null || move < bestMove))) {
+        bestScore = score;
+        bestMove = move;
+      }
+    }
+    return { score: bestScore, move: bestMove };
+  } else {
+    // Player (X) tries to minimize AI score
+    let bestScore = Infinity;
+    let bestMove = availableMoves[0] ?? null;
+    for (const move of availableMoves) {
+      board[move] = 'X';
+      const { score } = minimax(board, true);
+      board[move] = null;
+      if (score < bestScore || (score === bestScore && (bestMove === null || move < bestMove))) {
+        bestScore = score;
+        bestMove = move;
+      }
+    }
+    return { score: bestScore, move: bestMove };
+  }
+}
+
 // If run directly, display the welcome, the mapping board, prompt for a single validated move, then exit
 if (require.main === module) {
   (async () => {
@@ -233,6 +310,13 @@ if (require.main === module) {
         // fallback (should be equivalent to isDraw)
         console.log('Board is full: draw');
       } else {
+        // let the AI pick a move and show it
+        const aiMove = computeBestMove(board);
+        if (aiMove >= 0) {
+          console.log(`Computer chooses cell ${aiMove + 1}`);
+          board[aiMove] = 'O';
+          renderBoard(board, { showMapping: false });
+        }
         console.log('No winner yet.');
       }
 
@@ -244,4 +328,4 @@ if (require.main === module) {
   })();
 }
 
-module.exports = { createEmptyBoard, renderBoard, showWelcome, showScore, promptInput, promptForMove, promptForMoveValidated, applyMove, applyPlayerMove, checkWinner, isBoardFull, isDraw };
+module.exports = { createEmptyBoard, renderBoard, showWelcome, showScore, promptInput, promptForMove, promptForMoveValidated, applyMove, applyPlayerMove, checkWinner, isBoardFull, isDraw, computeBestMove, minimax };
