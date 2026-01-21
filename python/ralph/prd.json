@@ -87,8 +87,8 @@
         "Tests pass"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented: checkWinner(board) and isBoardFull(board) in tic_tac_toe.js. Tests in test_check_winner.js pass. Returns { winner: 'X'|'O'|null, winningLine: [i,i,i]|null }"
     },
     {
       "id": "US-007",
