@@ -70,8 +70,8 @@
         "Typecheck passes"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented: applyPlayerMove(board, cellNumber) wrapper and applyMove(board, cellNumber, mark). Updated board display shown after applying move."
     },
     {
       "id": "US-006",
