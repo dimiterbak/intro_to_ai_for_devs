@@ -4,15 +4,15 @@ You are an autonomous coding agent working on a software project.
 
 ## Your Task
 
-1. Read the PRD at `/ralph/prd.json`
-2. Read the TECH_DESIGN `/ralph/tech_design.md`
-3. Read the progress log at `/ralph/progress.txt` (check Codebase Patterns section first)
+1. Read the PRD at `prd.json`
+2. Read the TECH_DESIGN `tech_design.md`
+3. Read the progress log at `progress.txt` (check Codebase Patterns section first)
 5. Pick the **highest priority** user story where `passes: false`
 6. Implement that single user story
 7. Run quality checks (e.g., typecheck, lint, test - use whatever your project requires)
 8. Update TECH_DESIGN file if you discover reusable patterns (see below)
 9. Update the PRD to set `passes: true` for the completed story
-10. Append your progress to `/ralph/progress.txt`
+10. Append your progress to `progress.txt`
 
 ## Progress Report Format
 
@@ -28,8 +28,6 @@ Thread: https://ampcode.com/threads/$AMP_CURRENT_THREAD_ID
   - Useful context (e.g., "the evaluation panel is in component X")
 ---
 ```
-
-Include the thread URL so future iterations can use the `read_thread` tool to reference previous work if needed.
 
 The learnings section is critical - it helps future iterations avoid repeating mistakes and understand the codebase better.
 
@@ -79,16 +77,6 @@ Only update TECH_DESIGN if you have **genuinely reusable knowledge** that would 
 - Keep changes focused and minimal
 - Follow existing code patterns
 
-## Browser Testing (Required for Frontend Stories)
-
-For any story that changes UI, you MUST verify it works in the browser:
-
-1. Load the `dev-browser` skill
-2. Navigate to the relevant page
-3. Verify the UI changes work as expected
-4. Take a screenshot if helpful for the progress log
-
-A frontend story is NOT complete until browser verification passes.
 
 ## Stop Condition
 
