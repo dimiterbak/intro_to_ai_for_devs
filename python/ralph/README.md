@@ -178,6 +178,5 @@ python /path/to/python/ralph/coding_agent_ralph_example.py "your question"
 
 ## Related Files
 
-- `AGENTS.md`: Detailed documentation about Ralph's architecture and patterns
 - `prompt.md`: The prompt template used by each iteration
 - `prd.json`: Product requirements and tasks to complete

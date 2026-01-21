@@ -4,17 +4,15 @@ You are an autonomous coding agent working on a software project.
 
 ## Your Task
 
-1. Read the PRD at `prd.json` (in the same directory as this file)
-2. Read the TECH_DESIGN `tech_design.md`(in the same directory as this file)
-3. Read the progress log at `progress.txt` (check Codebase Patterns section first)
-4. Check you're on the correct branch from PRD `branchName`. If not, check it out or create from main.
+1. Read the PRD at `/ralph/prd.json`
+2. Read the TECH_DESIGN `/ralph/tech_design.md`
+3. Read the progress log at `/ralph/progress.txt` (check Codebase Patterns section first)
 5. Pick the **highest priority** user story where `passes: false`
 6. Implement that single user story
 7. Run quality checks (e.g., typecheck, lint, test - use whatever your project requires)
-8. Update AGENTS.md files if you discover reusable patterns (see below)
-9. If checks pass, commit ALL changes with message: `feat: [Story ID] - [Story Title]`
-10. Update the PRD to set `passes: true` for the completed story
-11. Append your progress to `progress.txt`
+8. Update TECH_DESIGN file if you discover reusable patterns (see below)
+9. Update the PRD to set `passes: true` for the completed story
+10. Append your progress to `/ralph/progress.txt`
 
 ## Progress Report Format
 
@@ -48,12 +46,12 @@ If you discover a **reusable pattern** that future iterations should know, add i
 
 Only add patterns that are **general and reusable**, not story-specific details.
 
-## Update AGENTS.md Files
+## Update TECH_DESIGN File
 
-Before committing, check if any edited files have learnings worth preserving in nearby AGENTS.md files:
+Before committing, check if any edited files have learnings worth preserving in nearby TECH_DESIGN file:
 
 1. **Identify directories with edited files** - Look at which directories you modified
-2. **Check for existing AGENTS.md** - Look for AGENTS.md in those directories or parent directories
+2. **Check for existing TECH_DESIGN** - Look for TECH_DESIGNd
 3. **Add valuable learnings** - If you discovered something future developers/agents should know:
    - API patterns or conventions specific to that module
    - Gotchas or non-obvious requirements
@@ -61,7 +59,7 @@ Before committing, check if any edited files have learnings worth preserving in 
    - Testing approaches for that area
    - Configuration or environment requirements
 
-**Examples of good AGENTS.md additions:**
+**Examples of good TECH_DESIGN additions:**
 - "When modifying X, also update Y to keep them in sync"
 - "This module uses pattern Z for all API calls"
 - "Tests require the dev server running on PORT 3000"
@@ -72,7 +70,7 @@ Before committing, check if any edited files have learnings worth preserving in 
 - Temporary debugging notes
 - Information already in progress.txt
 
-Only update AGENTS.md if you have **genuinely reusable knowledge** that would help future work in that directory.
+Only update TECH_DESIGN if you have **genuinely reusable knowledge** that would help future work.
 
 ## Quality Requirements
 

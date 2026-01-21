@@ -56,8 +56,8 @@
         "Typecheck passes"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented: promptForMoveValidated(board) validates input for non-numeric, out-of-range, occupied cells, empty input and re-prompts. Uses promptInput() helper to normalize input."
     },
     {
       "id": "US-005",

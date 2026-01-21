@@ -361,12 +361,12 @@ class ChatBot:
     def execute(self):
         self.number_of_prompts_sent += 1
         print("\n-- Prompt", self.number_of_prompts_sent, "--")
-        # print("\n=== FULL PROMPT SENT TO MODEL ===")  
-        # # Show the complete prompt being sent to the model
-        # for i, msg in enumerate(self.messages, 1):
-        #     # print(f"Message {i} ({msg['role']}):")
-        #     print(f"  {msg['content']}")
-        #     print()
+        print("\n=== FULL PROMPT SENT TO MODEL ===")  
+        # Show the complete prompt being sent to the model
+        for i, msg in enumerate(self.messages, 1):
+            # print(f"Message {i} ({msg['role']}):")
+            print(f"  {msg['content']}")
+            print()
             
         client = OpenAI(
             base_url=f"{ENDPOINT}",
