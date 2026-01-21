@@ -6,6 +6,7 @@
 // Implementation for US-004: Validate player move input (reject non-numeric, out of range,
 // occupied cells, empty input; re-prompt)
 // Implementation for US-005: Apply player move and update board (applyPlayerMove)
+// Implementation for US-006: Win detection (checkWinner) and isBoardFull
 
 const readline = require('readline');
 
@@ -154,6 +155,42 @@ function applyPlayerMove(board, cellNumber) {
   return applyMove(board, cellNumber, 'X');
 }
 
+// US-006: Implement win detection for rows, columns, diagonals
+// checkWinner(board) -> { winner: 'X'|'O'|null, winningLine: [i,i,i]|null }
+function checkWinner(board) {
+  if (!Array.isArray(board) || board.length !== 9) {
+    throw new Error('checkWinner requires a board array of length 9');
+  }
+
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+
+  for (const line of lines) {
+    const [a, b, c] = line;
+    const va = board[a];
+    if (va && va === board[b] && va === board[c]) {
+      return { winner: va, winningLine: [a, b, c] };
+    }
+  }
+
+  return { winner: null, winningLine: null };
+}
+
+function isBoardFull(board) {
+  if (!Array.isArray(board) || board.length !== 9) {
+    throw new Error('isBoardFull requires a board array of length 9');
+  }
+  return board.every((cell) => cell === 'X' || cell === 'O');
+}
+
 // If run directly, display the welcome, the mapping board, prompt for a single validated move, then exit
 if (require.main === module) {
   (async () => {
@@ -175,6 +212,16 @@ if (require.main === module) {
       console.log('Updated board:');
       renderBoard(board, { showMapping: false });
 
+      // Demonstrate win detection (for manual verification)
+      const result = checkWinner(board);
+      if (result.winner) {
+        console.log(`Winner detected: ${result.winner} on line ${result.winningLine}`);
+      } else if (isBoardFull(board)) {
+        console.log('Board is full: draw');
+      } else {
+        console.log('No winner yet.');
+      }
+
       process.exit(0);
     } catch (err) {
       console.error('An unexpected error occurred:', err);
@@ -183,4 +230,4 @@ if (require.main === module) {
   })();
 }
 
-module.exports = { createEmptyBoard, renderBoard, showWelcome, showScore, promptInput, promptForMove, promptForMoveValidated, applyMove, applyPlayerMove };
+module.exports = { createEmptyBoard, renderBoard, showWelcome, showScore, promptInput, promptForMove, promptForMoveValidated, applyMove, applyPlayerMove, checkWinner, isBoardFull };
