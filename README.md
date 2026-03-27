@@ -4,6 +4,8 @@ Welcome! This repo contains hands-on examples for three ecosystems. Pick your pr
 
 ## Choose your language guide
 
+- C++ — see `cpp/README.md`
+	- ./cpp/README.md
 - Node.js — see `node/README.md`
 	- ./node/README.md
 - Python — see `python/README.md`
@@ -15,6 +17,7 @@ Each guide covers prerequisites, environment setup, how to set your AI credentia
 
 ## Repository layout
 
+- `cpp/` — C++17 starter project
 - `node/` — TypeScript examples and scripts
 - `python/` — Python examples and utilities
 - `dotnet/` — .NET 9 console apps and examples
