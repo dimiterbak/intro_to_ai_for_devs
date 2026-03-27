@@ -24,6 +24,13 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(nlohmann_json liboai)
 
+get_target_property(OAI_INTERFACE_INCLUDE_DIRS oai INTERFACE_INCLUDE_DIRECTORIES)
+if(OAI_INTERFACE_INCLUDE_DIRS)
+    set_target_properties(oai PROPERTIES
+        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${OAI_INTERFACE_INCLUDE_DIRS}"
+    )
+endif()
+
 add_executable(intro_to_ai_cpp
     src/main.cpp
 )
