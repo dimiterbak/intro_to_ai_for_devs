@@ -35,11 +35,19 @@ add_executable(intro_to_ai_cpp
     src/main.cpp
 )
 
+add_executable(chatbot_example_cpp
+    src/chatbot_example.cpp
+)
+
 target_compile_features(intro_to_ai_cpp PRIVATE cxx_std_17)
+target_compile_features(chatbot_example_cpp PRIVATE cxx_std_17)
 target_link_libraries(intro_to_ai_cpp PRIVATE oai)
+target_link_libraries(chatbot_example_cpp PRIVATE oai)
 
 if(MSVC)
     target_compile_options(intro_to_ai_cpp PRIVATE /W4 /permissive-)
+    target_compile_options(chatbot_example_cpp PRIVATE /W4 /permissive-)
 else()
     target_compile_options(intro_to_ai_cpp PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(chatbot_example_cpp PRIVATE -Wall -Wextra -Wpedantic)
 endif()
