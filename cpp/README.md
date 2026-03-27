@@ -53,6 +53,14 @@ On the first configure, CMake will download `liboai` and `nlohmann/json`.
 ```bash
 cmake --build build
 ```
+
+On Windows with a multi-config generator, build the Debug configuration:
+
+```powershell
+cmake -S . -B build
+cmake --build build --config Debug
+```
+
 ## 4. Export your environment variables
 
 ### Windows PowerShell:
@@ -80,29 +88,8 @@ If `AI_ENDPOINT` already contains an `api-version=...` query parameter, `AI_API_
 ./build/intro_to_ai_cpp
 ```
 
-To enable real OpenAI API calls later, export your API key before running:
-
-```bash
-export OPENAI_API_KEY="your-api-key"
-```
-
-On Windows with a multi-config generator, build and run the Debug configuration:
+On Windows with a multi-config generator, run the Debug configuration:
 
 ```powershell
-cmake -S . -B build
-cmake --build build --config Debug
 .\build\Debug\intro_to_ai_cpp.exe
 ```
-
-## Project layout
-
-- `CMakeLists.txt` - project configuration and dependency fetching
-- `src/main.cpp` - application entry point
-- `build/` - generated build output (created locally)
-
-## Next steps
-
-- Replace the starter output with actual `liboai` API calls
-- Add more source files under `src/`
-- Add headers under `include/` if the project grows
-- Add tests with CTest or a framework such as Catch2 or GoogleTest
