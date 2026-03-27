@@ -61,6 +61,7 @@ For persistent environment variables (requires restart of terminal):
 setx AI_API_KEY "your_api_key_here"
 setx AI_ENDPOINT "your_endpoint_key_here"
 setx DEPLOYMENT_NAME "your_model_name-here"
+setx AI_API_VERSION "2024-02-15-preview"
 ```
 
 ### Linux / macOS:
@@ -68,7 +69,10 @@ setx DEPLOYMENT_NAME "your_model_name-here"
 export AI_API_KEY="your_api_key_here"
 export AI_ENDPOINT="your_endpoint_key_here"
 export DEPLOYMENT_NAME="your_model_name-here"
+export AI_API_VERSION="2024-02-15-preview"
 ```
+
+If `AI_ENDPOINT` already contains an `api-version=...` query parameter, `AI_API_VERSION` is not required.
 
 ## 5. Run a simple test
 
