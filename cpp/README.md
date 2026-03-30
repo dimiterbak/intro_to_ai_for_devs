@@ -119,29 +119,11 @@ If `AI_ENDPOINT` already contains an `api-version=...` query parameter, `AI_API_
 ## 5. Run a simple test
 
 ```bash
-./build/intro_to_ai_cpp
-```
-
-Run the chatbot sample:
-
-```bash
-./build/chatbot_example_cpp
-```
-
-Run the ReAct sample:
-
-```bash
-./build/react_example_cpp
-```
-
-Run the ReAct letter-count sample:
-
-```bash
-./build/react_count_example_cpp
+./build/test_openai
 ```
 
 On Windows with a multi-config generator, run the Debug configuration:
 
 ```powershell
-.\build\Debug\intro_to_ai_cpp.exe
+.\build\Debug\test_openai.exe
 ```
