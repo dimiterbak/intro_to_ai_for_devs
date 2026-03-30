@@ -134,6 +134,12 @@ Run the ReAct sample:
 ./build/react_example_cpp
 ```
 
+Run the ReAct letter-count sample:
+
+```bash
+./build/react_count_example_cpp
+```
+
 On Windows with a multi-config generator, run the Debug configuration:
 
 ```powershell
