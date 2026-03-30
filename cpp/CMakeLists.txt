@@ -39,6 +39,10 @@ add_executable(chatbot_example_cpp
     src/chatbot_example.cpp
 )
 
+add_executable(coding_agent_example_cpp
+    src/coding_agent_example.cpp
+)
+
 add_executable(react_example_cpp
     src/react_example.cpp
 )
@@ -49,21 +53,25 @@ add_executable(react_count_example_cpp
 
 target_compile_features(intro_to_ai_cpp PRIVATE cxx_std_17)
 target_compile_features(chatbot_example_cpp PRIVATE cxx_std_17)
+target_compile_features(coding_agent_example_cpp PRIVATE cxx_std_17)
 target_compile_features(react_example_cpp PRIVATE cxx_std_17)
 target_compile_features(react_count_example_cpp PRIVATE cxx_std_17)
 target_link_libraries(intro_to_ai_cpp PRIVATE oai)
 target_link_libraries(chatbot_example_cpp PRIVATE oai)
+target_link_libraries(coding_agent_example_cpp PRIVATE CURL::libcurl nlohmann_json::nlohmann_json)
 target_link_libraries(react_example_cpp PRIVATE oai CURL::libcurl)
 target_link_libraries(react_count_example_cpp PRIVATE oai CURL::libcurl)
 
 if(MSVC)
     target_compile_options(intro_to_ai_cpp PRIVATE /W4 /permissive-)
     target_compile_options(chatbot_example_cpp PRIVATE /W4 /permissive-)
+    target_compile_options(coding_agent_example_cpp PRIVATE /W4 /permissive-)
     target_compile_options(react_example_cpp PRIVATE /W4 /permissive-)
     target_compile_options(react_count_example_cpp PRIVATE /W4 /permissive-)
 else()
     target_compile_options(intro_to_ai_cpp PRIVATE -Wall -Wextra -Wpedantic)
     target_compile_options(chatbot_example_cpp PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(coding_agent_example_cpp PRIVATE -Wall -Wextra -Wpedantic)
     target_compile_options(react_example_cpp PRIVATE -Wall -Wextra -Wpedantic)
     target_compile_options(react_count_example_cpp PRIVATE -Wall -Wextra -Wpedantic)
 endif()
