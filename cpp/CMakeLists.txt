@@ -32,7 +32,7 @@ if(OAI_INTERFACE_INCLUDE_DIRS)
 endif()
 
 add_executable(test_openai
-    src/main.cpp
+    src/test_openai.cpp
 )
 
 add_executable(chatbot_example_cpp
