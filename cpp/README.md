@@ -122,6 +122,18 @@ If `AI_ENDPOINT` already contains an `api-version=...` query parameter, `AI_API_
 ./build/intro_to_ai_cpp
 ```
 
+Run the chatbot sample:
+
+```bash
+./build/chatbot_example_cpp
+```
+
+Run the ReAct sample:
+
+```bash
+./build/react_example_cpp
+```
+
 On Windows with a multi-config generator, run the Debug configuration:
 
 ```powershell
