@@ -12,7 +12,6 @@
 #include <stdexcept>
 #include <string>
 #include <system_error>
-#include <unistd.h>
 #include <utility>
 #include <vector>
 
@@ -164,19 +163,12 @@ void ensure_required_environment()
 void handle_sigint(int)
 {
     interrupted.store(true);
-    static constexpr char newline = '\n';
-    ::write(STDOUT_FILENO, &newline, 1);
 }
 
 void install_signal_handler()
 {
-    struct sigaction action {};
-    action.sa_handler = handle_sigint;
-    sigemptyset(&action.sa_mask);
-    action.sa_flags = 0;
-
-    if (sigaction(SIGINT, &action, nullptr) != 0) {
-        throw std::system_error(errno, std::generic_category(), "Failed to install SIGINT handler");
+    if (std::signal(SIGINT, handle_sigint) == SIG_ERR) {
+        throw std::runtime_error("Failed to install SIGINT handler");
     }
 }
 

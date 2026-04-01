@@ -6,6 +6,19 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+if(WIN32)
+    add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN)
+endif()
+
+if(WIN32 AND DEFINED CMAKE_TOOLCHAIN_FILE)
+    get_filename_component(_toolchain_dir "${CMAKE_TOOLCHAIN_FILE}" DIRECTORY)
+    get_filename_component(_scripts_dir "${_toolchain_dir}" DIRECTORY)
+    get_filename_component(_vcpkg_root "${_scripts_dir}" DIRECTORY)
+    if(EXISTS "${_vcpkg_root}/scripts/buildsystems/vcpkg.cmake")
+        set(ENV{VCPKG_ROOT} "${_vcpkg_root}")
+    endif()
+endif()
+
 include(FetchContent)
 
 find_package(CURL REQUIRED)

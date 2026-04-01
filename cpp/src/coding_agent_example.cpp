@@ -14,10 +14,8 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <sys/wait.h>
 #include <system_error>
 #include <thread>
-#include <unistd.h>
 #include <utility>
 #include <vector>
 
@@ -158,19 +156,12 @@ void ensure_required_environment()
 void handle_sigint(int)
 {
     interrupted.store(true);
-    static constexpr char newline = '\n';
-    ::write(STDOUT_FILENO, &newline, 1);
 }
 
 void install_signal_handler()
 {
-    struct sigaction action {};
-    action.sa_handler = handle_sigint;
-    sigemptyset(&action.sa_mask);
-    action.sa_flags = 0;
-
-    if (sigaction(SIGINT, &action, nullptr) != 0) {
-        throw std::system_error(errno, std::generic_category(), "Failed to install SIGINT handler");
+    if (std::signal(SIGINT, handle_sigint) == SIG_ERR) {
+        throw std::runtime_error("Failed to install SIGINT handler");
     }
 }
 
@@ -504,77 +495,33 @@ public:
 private:
     static CommandResult run_command(const std::string& command, const std::filesystem::path& cwd)
     {
-        std::string stdout_template = "/tmp/coding-agent-stdout-XXXXXX";
-        std::string stderr_template = "/tmp/coding-agent-stderr-XXXXXX";
+        const auto now = std::chrono::steady_clock::now().time_since_epoch().count();
+        const auto thread_id_hash = std::hash<std::thread::id>{}(std::this_thread::get_id());
+        const std::string unique = std::to_string(now) + "-" + std::to_string(thread_id_hash);
+        const std::filesystem::path stdout_template = std::filesystem::temp_directory_path() / ("coding-agent-stdout-" + unique + ".txt");
+        const std::filesystem::path stderr_template = std::filesystem::temp_directory_path() / ("coding-agent-stderr-" + unique + ".txt");
 
-        const int stdout_fd = mkstemp(stdout_template.data());
-        if (stdout_fd == -1) {
-            throw std::system_error(errno, std::generic_category(), "mkstemp failed for stdout");
-        }
+        const std::filesystem::path previous_cwd = std::filesystem::current_path();
+        std::filesystem::current_path(cwd);
 
-        const int stderr_fd = mkstemp(stderr_template.data());
-        if (stderr_fd == -1) {
-            ::close(stdout_fd);
-            std::filesystem::remove(stdout_template);
-            throw std::system_error(errno, std::generic_category(), "mkstemp failed for stderr");
-        }
+        std::string command_with_redirect = command
+            + " > \""
+            + stdout_template.string()
+            + "\" 2> \""
+            + stderr_template.string()
+            + "\"";
 
-        const pid_t child = fork();
-        if (child == -1) {
-            ::close(stdout_fd);
-            ::close(stderr_fd);
-            std::filesystem::remove(stdout_template);
-            std::filesystem::remove(stderr_template);
-            throw std::system_error(errno, std::generic_category(), "fork failed");
-        }
-
-        if (child == 0) {
-            if (::chdir(cwd.c_str()) != 0) {
-                _exit(126);
-            }
-
-            ::dup2(stdout_fd, STDOUT_FILENO);
-            ::dup2(stderr_fd, STDERR_FILENO);
-            ::close(stdout_fd);
-            ::close(stderr_fd);
-            ::execl("/bin/sh", "sh", "-lc", command.c_str(), static_cast<char*>(nullptr));
-            _exit(127);
-        }
-
-        ::close(stdout_fd);
-        ::close(stderr_fd);
-
-        int status = 0;
-        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(15);
-        while (true) {
-            const pid_t wait_result = ::waitpid(child, &status, WNOHANG);
-            if (wait_result == child) {
-                break;
-            }
-            if (wait_result == -1) {
-                std::filesystem::remove(stdout_template);
-                std::filesystem::remove(stderr_template);
-                throw std::system_error(errno, std::generic_category(), "waitpid failed");
-            }
-            if (std::chrono::steady_clock::now() >= deadline) {
-                ::kill(child, SIGKILL);
-                ::waitpid(child, &status, 0);
-                break;
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        }
+        const int status = std::system(command_with_redirect.c_str());
+        std::filesystem::current_path(previous_cwd);
 
         CommandResult result;
-        result.stdout_output = read_text_file(stdout_template);
-        result.stderr_output = read_text_file(stderr_template);
-
-        if (WIFEXITED(status)) {
-            result.return_code = WEXITSTATUS(status);
-        } else if (WIFSIGNALED(status)) {
-            result.return_code = 128 + WTERMSIG(status);
-        } else {
-            result.return_code = 1;
+        if (std::filesystem::exists(stdout_template)) {
+            result.stdout_output = read_text_file(stdout_template);
         }
+        if (std::filesystem::exists(stderr_template)) {
+            result.stderr_output = read_text_file(stderr_template);
+        }
+        result.return_code = status;
 
         std::filesystem::remove(stdout_template);
         std::filesystem::remove(stderr_template);
