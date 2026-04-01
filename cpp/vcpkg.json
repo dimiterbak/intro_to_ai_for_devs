@@ -1,0 +1,7 @@
+{
+  "name": "intro-to-ai-for-devs-cpp",
+  "dependencies": [
+    "curl",
+    "nlohmann-json"
+  ]
+}
