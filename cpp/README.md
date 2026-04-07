@@ -223,3 +223,16 @@ On Windows with a multi-config generator, run the Debug configuration:
 ```powershell
 .\build\Debug\test_openai.exe
 ```
+### Using the MCP "Sequential Thinking" tool
+
+The CPP coding agent (`coding_agent_mcp_example.cpp`) can call the MCP server tool named `sequentialthinking`.
+
+- Ensure Node.js and `npx` are available in your PATH
+- Either rely on `npx -y @modelcontextprotocol/server-sequential-thinking` (download on first run), or pre-install as shown below
+- Optional privacy toggle: set `DISABLE_THOUGHT_LOGGING=true` to suppress thought logs from the server
+
+Optional but recommended for offline/first-run speed:
+```bash
+# Prefetch the Sequential Thinking MCP server (otherwise npx will fetch it on first use)
+npm install -D @modelcontextprotocol/server-sequential-thinking
+```
