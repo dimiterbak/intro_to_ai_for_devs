@@ -156,6 +156,10 @@ setx AI_ENDPOINT "your_endpoint_key_here"
 setx DEPLOYMENT_NAME "your_model_name-here"
 setx AI_API_VERSION "2024-02-15-preview"
 ```
+How to check what variables are set:
+```
+ls env:
+```
 
 ### Linux / macOS:
 ```
@@ -192,11 +196,18 @@ Next, open it with the following command:
 ```
 open -a TextEdit.app ~/.zshenv
 
+open -a TextEdit.app ~/.bash
+
 export AI_API_KEY="your_api_key_here"
 export AI_ENDPOINT="your_endpoint_key_here"
 export DEPLOYMENT_NAME="your_model_name-here"
 export AI_API_VERSION="2024-02-15-preview"
 
+```
+
+How to check what variables are set:
+```
+printenv
 ```
 
 If `AI_ENDPOINT` already contains an `api-version=...` query parameter, `AI_API_VERSION` is not required.
