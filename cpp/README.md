@@ -196,7 +196,7 @@ Next, open it with the following command:
 ```
 open -a TextEdit.app ~/.zshenv
 
-open -a TextEdit.app ~/.bash
+open -a TextEdit.app ~/.bashbash_profile
 
 export AI_API_KEY="your_api_key_here"
 export AI_ENDPOINT="your_endpoint_key_here"
